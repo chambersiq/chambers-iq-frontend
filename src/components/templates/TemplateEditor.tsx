@@ -21,11 +21,14 @@ const VARIABLES = [
     { key: 'current_date', label: 'Current Date' },
 ]
 
-export function TemplateEditor() {
-    const [content, setContent] = useState('')
+interface TemplateEditorProps {
+    value?: string
+    onChange?: (value: string) => void
+}
 
+export function TemplateEditor({ value = '', onChange }: TemplateEditorProps) {
     const insertVariable = (variableKey: string) => {
-        setContent(prev => prev + ` {{${variableKey}}} `)
+        onChange?.(value + ` {{${variableKey}}} `)
     }
 
     return (
@@ -63,8 +66,8 @@ export function TemplateEditor() {
                 <Textarea
                     className="flex-1 font-mono text-sm resize-none p-4 leading-relaxed"
                     placeholder="Start typing your template here..."
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
+                    value={value}
+                    onChange={(e) => onChange?.(e.target.value)}
                 />
             </div>
 

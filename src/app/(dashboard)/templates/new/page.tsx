@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { TemplateEditor } from '@/components/templates/TemplateEditor'
@@ -6,6 +7,12 @@ import { ArrowLeft, Save } from 'lucide-react'
 import Link from 'next/link'
 
 export default function NewTemplatePage() {
+    const [templateContent, setTemplateContent] = useState('')
+
+    const handleAIGenerated = (content: string) => {
+        setTemplateContent(content)
+    }
+
     return (
         <div className="h-[calc(100vh-4rem)] flex flex-col space-y-4">
             {/* Header */}
@@ -24,7 +31,7 @@ export default function NewTemplatePage() {
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <AITemplateGenerator />
+                    <AITemplateGenerator onGenerate={handleAIGenerated} />
                     <Button>
                         <Save className="mr-2 h-4 w-4" />
                         Save Template
@@ -33,7 +40,7 @@ export default function NewTemplatePage() {
             </div>
 
             {/* Editor */}
-            <TemplateEditor />
+            <TemplateEditor value={templateContent} onChange={setTemplateContent} />
         </div>
     )
 }

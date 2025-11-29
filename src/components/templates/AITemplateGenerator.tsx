@@ -3,11 +3,17 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Sparkles, Loader2 } from 'lucide-react'
 
-export function AITemplateGenerator() {
+interface AITemplateGeneratorProps {
+    onGenerate: (content: string) => void
+}
+
+export function AITemplateGenerator({ onGenerate }: AITemplateGeneratorProps) {
     const [prompt, setPrompt] = useState('')
+    const [samples, setSamples] = useState('')
     const [isGenerating, setIsGenerating] = useState(false)
     const [isOpen, setIsOpen] = useState(false)
 
@@ -17,8 +23,31 @@ export function AITemplateGenerator() {
         setTimeout(() => {
             setIsGenerating(false)
             setIsOpen(false)
-            // In a real app, this would update the editor content
-            console.log('Generated template for:', prompt)
+
+            // Mock generation logic
+            const generatedContent = `AGREEMENT
+
+This Agreement is made on {{current_date}} between {{client_name}} ("Client") and {{opposing_party}} ("Contractor").
+
+1. SERVICES
+Contractor agrees to provide the following services: ${prompt}
+
+2. REFERENCE MATERIALS
+Based on the provided samples:
+${samples.split('\n').map(s => `> ${s}`).join('\n')}
+
+3. JURISDICTION
+This agreement shall be governed by the laws of [Jurisdiction].
+
+IN WITNESS WHEREOF, the parties have executed this Agreement.
+
+________________________
+{{client_name}}
+
+________________________
+{{opposing_party}}`
+
+            onGenerate(generatedContent)
         }, 2000)
     }
 
@@ -30,23 +59,36 @@ export function AITemplateGenerator() {
                     Generate with AI
                 </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>
-                    <DialogTitle>Generate Template</DialogTitle>
+                    <DialogTitle>Generate Template with AI</DialogTitle>
                     <DialogDescription>
-                        Describe the legal document you need, and AI will create a starting draft with variables.
+                        Describe the document and provide samples to help the AI understand the style and structure.
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4 py-4">
-                    <Textarea
-                        placeholder="e.g. Create a Non-Disclosure Agreement for a software contractor in California..."
-                        className="min-h-[100px]"
-                        value={prompt}
-                        onChange={(e) => setPrompt(e.target.value)}
-                    />
-                    <div className="text-xs text-muted-foreground">
-                        Tip: Be specific about jurisdiction and parties involved.
+                    <div className="space-y-2">
+                        <Label>Description</Label>
+                        <Textarea
+                            placeholder="e.g. Create a Non-Disclosure Agreement for a software contractor in California..."
+                            className="min-h-[80px]"
+                            value={prompt}
+                            onChange={(e) => setPrompt(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Samples / Context</Label>
+                        <Textarea
+                            placeholder="Paste similar clauses, sample contracts, or list of requirements here..."
+                            className="min-h-[150px]"
+                            value={samples}
+                            onChange={(e) => setSamples(e.target.value)}
+                        />
+                        <div className="text-xs text-muted-foreground">
+                            The AI will use these samples to match the tone and structure.
+                        </div>
                     </div>
                 </div>
 
