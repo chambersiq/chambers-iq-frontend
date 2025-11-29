@@ -106,6 +106,11 @@ export function CaseList() {
     const [searchTerm, setSearchTerm] = useState('')
     const [statusFilter, setStatusFilter] = useState<string>('all')
     const [priorityFilter, setPriorityFilter] = useState<string>('all')
+    const [clientFilter, setClientFilter] = useState<string>('all')
+
+    // Get unique clients
+    const clients = Array.from(new Set(MOCK_CASES.map(c => JSON.stringify({ id: c.clientId, name: c.clientName }))))
+        .map(s => JSON.parse(s))
 
     const filteredCases = MOCK_CASES.filter(c => {
         const matchesSearch =
@@ -115,8 +120,9 @@ export function CaseList() {
 
         const matchesStatus = statusFilter === 'all' || c.status === statusFilter
         const matchesPriority = priorityFilter === 'all' || c.priority === priorityFilter
+        const matchesClient = clientFilter === 'all' || c.clientId === clientFilter
 
-        return matchesSearch && matchesStatus && matchesPriority
+        return matchesSearch && matchesStatus && matchesPriority && matchesClient
     })
 
     return (
@@ -133,6 +139,19 @@ export function CaseList() {
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
+                    <Select value={clientFilter} onValueChange={setClientFilter}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Filter by Client" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Clients</SelectItem>
+                            {clients.map((client: any) => (
+                                <SelectItem key={client.id} value={client.id}>
+                                    {client.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
                         <SelectTrigger className="w-[150px]">
                             <SelectValue placeholder="Status" />

@@ -41,6 +41,20 @@ export default function NewDraftPage() {
                 <CardContent>
                     <form onSubmit={handleCreate} className="space-y-6">
                         <div className="space-y-2">
+                            <Label>Select Client</Label>
+                            <Select>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a client..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="1">John Smith</SelectItem>
+                                    <SelectItem value="2">Jane Doe</SelectItem>
+                                    <SelectItem value="3">Robert Johnson</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
                             <Label>Select Case</Label>
                             <Select>
                                 <SelectTrigger>
