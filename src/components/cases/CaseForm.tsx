@@ -10,16 +10,23 @@ import { PartiesSection } from './PartiesSection'
 import { ImportantDatesSection } from './ImportantDatesSection'
 import { FinancialSection } from './FinancialSection'
 import { useRouter } from 'next/navigation'
+import { Case } from '@/types/case'
 
-export function CaseForm() {
+interface CaseFormProps {
+    initialData?: Partial<Case>
+    isEditing?: boolean
+}
+
+export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
     const router = useRouter()
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         // TODO: Handle submission
         console.log('Case submitted')
-        // Mock ID '1' for now
-        router.push('/cases/1?action=created')
+        // Mock ID '1' for now, or use existing ID
+        const targetId = initialData?.id || '1'
+        router.push(`/cases/${targetId}?action=${isEditing ? 'updated' : 'created'}`)
     }
 
     return (
@@ -32,15 +39,24 @@ export function CaseForm() {
                 <CardContent className="grid gap-6 md:grid-cols-2">
                     <div className="space-y-2">
                         <Label htmlFor="caseName">Case Name *</Label>
-                        <Input id="caseName" placeholder="e.g. Smith v. Jones" required />
+                        <Input
+                            id="caseName"
+                            placeholder="e.g. Smith v. Jones"
+                            required
+                            defaultValue={initialData?.caseName}
+                        />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="caseNumber">Case Number</Label>
-                        <Input id="caseNumber" placeholder="Auto-generated if empty" />
+                        <Input
+                            id="caseNumber"
+                            placeholder="Auto-generated if empty"
+                            defaultValue={initialData?.caseNumber}
+                        />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="client">Client *</Label>
-                        <Select required>
+                        <Select required defaultValue={initialData?.clientId}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select client" />
                             </SelectTrigger>
@@ -52,7 +68,7 @@ export function CaseForm() {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="status">Status</Label>
-                        <Select defaultValue="draft">
+                        <Select defaultValue={initialData?.status || "draft"}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select status" />
                             </SelectTrigger>
@@ -70,7 +86,7 @@ export function CaseForm() {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="type">Case Type *</Label>
-                        <Select required>
+                        <Select required defaultValue={initialData?.caseType?.split('-')[0] || undefined}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select type" />
                             </SelectTrigger>
@@ -87,7 +103,7 @@ export function CaseForm() {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="priority">Priority</Label>
-                        <Select defaultValue="medium">
+                        <Select defaultValue={initialData?.priority || "medium"}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select priority" />
                             </SelectTrigger>
@@ -103,7 +119,7 @@ export function CaseForm() {
             </Card>
 
             {/* Sections */}
-            <CaseSummarySection />
+            <CaseSummarySection initialData={initialData?.caseSummary} />
             <PartiesSection />
             <ImportantDatesSection />
             <FinancialSection />
@@ -114,7 +130,7 @@ export function CaseForm() {
                     Cancel
                 </Button>
                 <Button type="submit" size="lg">
-                    Create Case
+                    {isEditing ? 'Update Case' : 'Create Case'}
                 </Button>
             </div>
         </form>

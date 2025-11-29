@@ -6,7 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Info } from 'lucide-react'
 
-export function CaseSummarySection() {
+interface CaseSummarySectionProps {
+    initialData?: string
+}
+
+export function CaseSummarySection({ initialData }: CaseSummarySectionProps) {
     return (
         <Card>
             <CardHeader>
@@ -31,6 +35,7 @@ export function CaseSummarySection() {
                         placeholder="High-level overview: 'Client alleges breach of contract by defendant XYZ Corp. Defendant failed to pay $500K for services rendered under March 2024 agreement...'"
                         className="min-h-[150px]"
                         required
+                        defaultValue={initialData}
                     />
                     <p className="text-xs text-muted-foreground text-right">0 characters</p>
                 </div>
