@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Sparkles, Loader2 } from 'lucide-react'
+import { Sparkles, Loader2, Upload, FileText, X } from 'lucide-react'
 
 interface AITemplateGeneratorProps {
     onGenerate: (content: string) => void
@@ -13,9 +14,20 @@ interface AITemplateGeneratorProps {
 
 export function AITemplateGenerator({ onGenerate }: AITemplateGeneratorProps) {
     const [prompt, setPrompt] = useState('')
-    const [samples, setSamples] = useState('')
+    const [files, setFiles] = useState<File[]>([])
     const [isGenerating, setIsGenerating] = useState(false)
     const [isOpen, setIsOpen] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            setFiles(prev => [...prev, ...Array.from(e.target.files!)])
+        }
+    }
+
+    const removeFile = (index: number) => {
+        setFiles(prev => prev.filter((_, i) => i !== index))
+    }
 
     const handleGenerate = () => {
         setIsGenerating(true)
@@ -25,6 +37,7 @@ export function AITemplateGenerator({ onGenerate }: AITemplateGeneratorProps) {
             setIsOpen(false)
 
             // Mock generation logic
+            const fileNames = files.map(f => f.name).join(', ')
             const generatedContent = `AGREEMENT
 
 This Agreement is made on {{current_date}} between {{client_name}} ("Client") and {{opposing_party}} ("Contractor").
@@ -33,8 +46,8 @@ This Agreement is made on {{current_date}} between {{client_name}} ("Client") an
 Contractor agrees to provide the following services: ${prompt}
 
 2. REFERENCE MATERIALS
-Based on the provided samples:
-${samples.split('\n').map(s => `> ${s}`).join('\n')}
+Based on the provided sample documents:
+${files.length > 0 ? files.map(f => `> [Analyzed File: ${f.name}]`).join('\n') : '> No samples provided'}
 
 3. JURISDICTION
 This agreement shall be governed by the laws of [Jurisdiction].
@@ -63,7 +76,7 @@ ________________________
                 <DialogHeader>
                     <DialogTitle>Generate Template with AI</DialogTitle>
                     <DialogDescription>
-                        Describe the document and provide samples to help the AI understand the style and structure.
+                        Describe the document and upload sample files (PDF, DOCX) to help the AI understand the style and structure.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -79,15 +92,48 @@ ________________________
                     </div>
 
                     <div className="space-y-2">
-                        <Label>Samples / Context</Label>
-                        <Textarea
-                            placeholder="Paste similar clauses, sample contracts, or list of requirements here..."
-                            className="min-h-[150px]"
-                            value={samples}
-                            onChange={(e) => setSamples(e.target.value)}
-                        />
-                        <div className="text-xs text-muted-foreground">
-                            The AI will use these samples to match the tone and structure.
+                        <Label>Sample Documents</Label>
+                        <div className="grid gap-4">
+                            <div
+                                className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-50 transition-colors"
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                <Upload className="h-8 w-8 text-muted-foreground" />
+                                <div className="text-sm text-muted-foreground text-center">
+                                    <span className="font-semibold text-primary">Click to upload</span> or drag and drop
+                                    <br />
+                                    PDF or DOCX files
+                                </div>
+                                <Input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    className="hidden"
+                                    multiple
+                                    accept=".pdf,.docx,.doc"
+                                    onChange={handleFileChange}
+                                />
+                            </div>
+
+                            {files.length > 0 && (
+                                <div className="space-y-2">
+                                    {files.map((file, index) => (
+                                        <div key={index} className="flex items-center justify-between p-2 bg-slate-50 rounded border text-sm">
+                                            <div className="flex items-center gap-2 overflow-hidden">
+                                                <FileText className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                                                <span className="truncate">{file.name}</span>
+                                            </div>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-6 w-6"
+                                                onClick={() => removeFile(index)}
+                                            >
+                                                <X className="h-3 w-3" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
