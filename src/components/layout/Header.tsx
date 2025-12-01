@@ -1,7 +1,8 @@
 'use client'
 
-import { Bell, Search } from 'lucide-react'
+import { Bell, Search, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { signOut } from 'next-auth/react'
 
 import { useAuth } from '@/hooks/api/useCompany'
 import { getInitials } from '@/lib/utils'
@@ -32,7 +33,7 @@ export function Header() {
                 </Button>
 
                 {/* User Menu */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 border-r border-slate-200 pr-4 mr-1">
                     <div className="text-right">
                         <p className="text-sm font-medium">{user.fullName || 'User'}</p>
                         <p className="text-xs text-slate-500 capitalize">{user.role || 'User'}</p>
@@ -41,6 +42,16 @@ export function Header() {
                         {user.fullName ? getInitials(user.fullName) : 'U'}
                     </div>
                 </div>
+
+                {/* Logout */}
+                <Button
+                    variant="ghost"
+                    onClick={() => signOut({ callbackUrl: '/' })}
+                    className="text-slate-500 hover:text-red-600 gap-2"
+                >
+                    <LogOut className="h-4 w-4" />
+                    <span>Sign Out</span>
+                </Button>
             </div>
         </header>
     )
