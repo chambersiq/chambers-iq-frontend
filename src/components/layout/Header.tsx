@@ -3,7 +3,12 @@
 import { Bell, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
+import { useAuth } from '@/hooks/api/useCompany'
+import { getInitials } from '@/lib/utils'
+
 export function Header() {
+    const { user } = useAuth()
+
     return (
         <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-white px-6">
             {/* Search */}
@@ -29,11 +34,11 @@ export function Header() {
                 {/* User Menu */}
                 <div className="flex items-center gap-3">
                     <div className="text-right">
-                        <p className="text-sm font-medium">John Doe</p>
-                        <p className="text-xs text-slate-500">Attorney</p>
+                        <p className="text-sm font-medium">{user.fullName || 'User'}</p>
+                        <p className="text-xs text-slate-500 capitalize">{user.role || 'User'}</p>
                     </div>
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-white font-semibold">
-                        JD
+                        {user.fullName ? getInitials(user.fullName) : 'U'}
                     </div>
                 </div>
             </div>

@@ -31,58 +31,20 @@ import {
 import { Case, CaseStatus, CasePriority } from '@/types/case'
 import { formatDate, formatTimeAgo } from '@/lib/utils'
 import Link from 'next/link'
-
-// Mock data
-const MOCK_CASES: Case[] = [
-    {
-        id: '1',
-        caseNumber: 'CV-2024-001',
-        caseName: 'Smith v. Jones',
-        clientId: '1',
-        clientName: 'John Smith',
-        caseType: 'civil-litigation',
-        status: 'active',
-        priority: 'high',
-        caseSummary: 'Breach of contract dispute regarding construction delays.',
-        createdAt: '2024-01-15T10:00:00Z',
-        updatedAt: '2024-01-20T14:30:00Z',
-        createdBy: 'user1',
-        archived: false,
-        feeArrangement: 'hourly'
-    },
-    {
-        id: '2',
-        caseNumber: 'CR-2023-156',
-        caseName: 'State v. Doe',
-        clientId: '2',
-        clientName: 'Jane Doe',
-        caseType: 'criminal-defense',
-        status: 'trial',
-        priority: 'urgent',
-        caseSummary: 'Defense against alleged traffic violation.',
-        createdAt: '2023-11-20T14:30:00Z',
-        updatedAt: '2024-01-22T09:15:00Z',
-        createdBy: 'user1',
-        archived: false,
-        feeArrangement: 'flat-fee'
-    },
-    {
-        id: '3',
-        caseNumber: 'EP-2024-005',
-        caseName: 'Estate of Robert Johnson',
-        clientId: '3',
-        clientName: 'Robert Johnson',
-        caseType: 'estate-planning',
-        status: 'draft',
-        priority: 'medium',
-        caseSummary: 'Drafting of will and trust documents.',
-        createdAt: '2024-01-25T11:20:00Z',
-        updatedAt: '2024-01-25T11:20:00Z',
-        createdBy: 'user1',
-        archived: false,
-        feeArrangement: 'flat-fee'
-    }
-]
+import { useCases, useDeleteCase } from '@/hooks/api/useCases'
+import { useAuth } from '@/hooks/api/useCompany'
+import { useClients } from '@/hooks/api/useClients'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { toast } from 'sonner'
 
 const STATUS_COLORS: Record<CaseStatus, string> = {
     'draft': 'secondary',
@@ -103,27 +65,51 @@ const PRIORITY_COLORS: Record<CasePriority, string> = {
 }
 
 export function CaseList() {
+    const { user } = useAuth()
+    const companyId = user?.companyId || ''
+
     const [searchTerm, setSearchTerm] = useState('')
     const [statusFilter, setStatusFilter] = useState<string>('all')
     const [priorityFilter, setPriorityFilter] = useState<string>('all')
     const [clientFilter, setClientFilter] = useState<string>('all')
 
-    // Get unique clients
-    const clients = Array.from(new Set(MOCK_CASES.map(c => JSON.stringify({ id: c.clientId, name: c.clientName }))))
-        .map(s => JSON.parse(s))
+    // Delete state
+    const [caseToDelete, setCaseToDelete] = useState<Case | null>(null)
 
-    const filteredCases = MOCK_CASES.filter(c => {
+    const { data: cases = [], isLoading } = useCases(companyId, clientFilter === 'all' ? undefined : clientFilter)
+    const { data: clients = [] } = useClients(companyId)
+    const deleteCase = useDeleteCase(companyId)
+
+    const handleDelete = () => {
+        if (!caseToDelete) return
+
+        deleteCase.mutate({ clientId: caseToDelete.clientId, caseId: caseToDelete.caseId }, {
+            onSuccess: () => {
+                toast.success("Case deleted successfully")
+                setCaseToDelete(null)
+            },
+            onError: (error) => {
+                toast.error("Failed to delete case")
+                console.error(error)
+            }
+        })
+    }
+
+    const filteredCases = cases.filter(c => {
         const matchesSearch =
             c.caseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             c.caseNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            c.clientName.toLowerCase().includes(searchTerm.toLowerCase())
+            (c.clientName || '').toLowerCase().includes(searchTerm.toLowerCase())
 
         const matchesStatus = statusFilter === 'all' || c.status === statusFilter
         const matchesPriority = priorityFilter === 'all' || c.priority === priorityFilter
-        const matchesClient = clientFilter === 'all' || c.clientId === clientFilter
 
-        return matchesSearch && matchesStatus && matchesPriority && matchesClient
+        return matchesSearch && matchesStatus && matchesPriority
     })
+
+    if (isLoading) {
+        return <div>Loading cases...</div>
+    }
 
     return (
         <div className="space-y-4">
@@ -145,11 +131,16 @@ export function CaseList() {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Clients</SelectItem>
-                            {clients.map((client: any) => (
-                                <SelectItem key={client.id} value={client.id}>
-                                    {client.name}
-                                </SelectItem>
-                            ))}
+                            {clients.map((client) => {
+                                const label = client.clientType === 'individual'
+                                    ? client.fullName
+                                    : client.companyName;
+                                return (
+                                    <SelectItem key={client.id} value={client.id}>
+                                        {label}
+                                    </SelectItem>
+                                )
+                            })}
                         </SelectContent>
                     </Select>
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -204,10 +195,10 @@ export function CaseList() {
                             </TableRow>
                         ) : (
                             filteredCases.map((c) => (
-                                <TableRow key={c.id}>
+                                <TableRow key={c.caseId}>
                                     <TableCell className="font-mono text-xs">{c.caseNumber}</TableCell>
                                     <TableCell className="font-medium">
-                                        <Link href={`/cases/${c.id}`} className="hover:underline text-blue-600">
+                                        <Link href={`/cases/${c.caseId}`} className="hover:underline text-blue-600">
                                             {c.caseName}
                                         </Link>
                                     </TableCell>
@@ -239,17 +230,20 @@ export function CaseList() {
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                 <DropdownMenuItem asChild>
-                                                    <Link href={`/cases/${c.id}`}>
+                                                    <Link href={`/cases/${c.caseId}`}>
                                                         <Eye className="mr-2 h-4 w-4" /> View Dashboard
                                                     </Link>
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem asChild>
-                                                    <Link href={`/cases/${c.id}/edit`}>
+                                                    <Link href={`/cases/${c.caseId}/edit`}>
                                                         <Edit className="mr-2 h-4 w-4" /> Edit Case
                                                     </Link>
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
-                                                <DropdownMenuItem className="text-red-600">
+                                                <DropdownMenuItem
+                                                    className="text-red-600 cursor-pointer"
+                                                    onClick={() => setCaseToDelete(c)}
+                                                >
                                                     <Trash2 className="mr-2 h-4 w-4" /> Delete
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
@@ -261,6 +255,24 @@ export function CaseList() {
                     </TableBody>
                 </Table>
             </div>
+
+            <AlertDialog open={!!caseToDelete} onOpenChange={(open) => !open && setCaseToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the case
+                            "{caseToDelete?.caseName}" and all associated data.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }

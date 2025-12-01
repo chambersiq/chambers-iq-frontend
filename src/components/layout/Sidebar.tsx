@@ -17,7 +17,7 @@ import {
 const navigation = [
     {
         name: 'Dashboard',
-        href: '/',
+        href: '/dashboard',
         icon: Home,
     },
     {
@@ -52,15 +52,34 @@ const secondaryNavigation = [
     { name: 'Help', href: '/help', icon: HelpCircle },
 ]
 
+import { signOut, useSession } from 'next-auth/react'
+import { LogOut } from 'lucide-react'
+import { getInitials } from '@/lib/utils'
+
+// ... existing imports ...
+
+import { useAuth, useCompany } from '@/hooks/api/useCompany'
+
 export function Sidebar() {
     const pathname = usePathname()
+    const { user } = useAuth()
+    const { data: company, isLoading: isCompanyLoading } = useCompany(user.companyId)
 
     return (
         <div className="flex h-full w-64 flex-col bg-slate-900 text-white">
             {/* Logo */}
             <div className="flex h-16 items-center px-6 border-b border-slate-800">
-                <Briefcase className="h-8 w-8 text-blue-400" />
-                <span className="ml-3 text-xl font-bold">Chambers IQ</span>
+                <Link href="/dashboard" className="flex items-center">
+                    <Briefcase className="h-8 w-8 text-blue-400" />
+                    <div className="ml-3 flex flex-col">
+                        <span className="text-lg font-bold leading-none truncate max-w-[160px]">
+                            {isCompanyLoading ? 'Chambers IQ' : (company?.name || 'Chambers IQ')}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-medium mt-1">
+                            powered by Chambers IQ
+                        </span>
+                    </div>
+                </Link>
             </div>
 
             {/* Navigation */}
@@ -108,6 +127,13 @@ export function Sidebar() {
                             </Link>
                         )
                     })}
+                    <button
+                        onClick={() => signOut({ callbackUrl: '/' })}
+                        className="flex w-full items-center rounded-lg px-3 py-2 text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+                    >
+                        <LogOut className="h-5 w-5 mr-3" />
+                        Sign Out
+                    </button>
                 </div>
             </nav>
 
@@ -115,11 +141,11 @@ export function Sidebar() {
             <div className="border-t border-slate-800 p-4">
                 <div className="flex items-center">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-white font-semibold">
-                        JD
+                        {user.fullName ? getInitials(user.fullName) : 'U'}
                     </div>
-                    <div className="ml-3">
-                        <p className="text-sm font-medium">John Doe</p>
-                        <p className="text-xs text-slate-400">Attorney at Law</p>
+                    <div className="ml-3 overflow-hidden">
+                        <p className="text-sm font-medium truncate">{user.fullName || 'User'}</p>
+                        <p className="text-xs text-slate-400 truncate capitalize">{user.role || 'User'}</p>
                     </div>
                 </div>
             </div>

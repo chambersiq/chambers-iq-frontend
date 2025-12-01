@@ -5,12 +5,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Info } from 'lucide-react'
+import { useFormContext } from 'react-hook-form'
 
-interface CaseSummarySectionProps {
-    initialData?: string
-}
+export function CaseSummarySection() {
+    const { register, watch } = useFormContext()
+    const summary = watch('caseSummary') || ''
 
-export function CaseSummarySection({ initialData }: CaseSummarySectionProps) {
     return (
         <Card>
             <CardHeader>
@@ -34,10 +34,9 @@ export function CaseSummarySection({ initialData }: CaseSummarySectionProps) {
                         id="caseSummary"
                         placeholder="High-level overview: 'Client alleges breach of contract by defendant XYZ Corp. Defendant failed to pay $500K for services rendered under March 2024 agreement...'"
                         className="min-h-[150px]"
-                        required
-                        defaultValue={initialData}
+                        {...register('caseSummary', { required: true, minLength: 100 })}
                     />
-                    <p className="text-xs text-muted-foreground text-right">0 characters</p>
+                    <p className="text-xs text-muted-foreground text-right">{summary.length} characters</p>
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2">
@@ -47,6 +46,7 @@ export function CaseSummarySection({ initialData }: CaseSummarySectionProps) {
                             id="clientPosition"
                             placeholder="What the client wants and why..."
                             className="min-h-[100px]"
+                            {...register('clientPosition')}
                         />
                     </div>
                     <div className="space-y-2">
@@ -55,6 +55,7 @@ export function CaseSummarySection({ initialData }: CaseSummarySectionProps) {
                             id="opposingPosition"
                             placeholder="What the other side claims..."
                             className="min-h-[100px]"
+                            {...register('opposingPartyPosition')}
                         />
                     </div>
                 </div>
@@ -65,6 +66,12 @@ export function CaseSummarySection({ initialData }: CaseSummarySectionProps) {
                         id="keyFacts"
                         placeholder="• Contract signed March 2024&#10;• Work completed June 2024&#10;• Payment due July 15, 2024"
                         className="min-h-[100px]"
+                        {...register('keyFacts')} // Note: keyFacts is List[str] in backend, but Textarea returns string. I might need to transform it.
+                    // For now, let's treat it as string in frontend and split it before submit or update backend to accept string.
+                    // Backend `CaseBase` says `keyFacts: Optional[List[str]]`.
+                    // I should probably change backend to `str` (text block) or handle splitting.
+                    // Given it's a textarea, a string is better for MVP.
+                    // I'll update backend schema later if needed, or split in `onSubmit`.
                     />
                 </div>
 
@@ -75,6 +82,7 @@ export function CaseSummarySection({ initialData }: CaseSummarySectionProps) {
                             id="legalIssues"
                             placeholder="Core legal questions..."
                             className="min-h-[80px]"
+                            {...register('legalIssues')}
                         />
                     </div>
                     <div className="space-y-2">
@@ -83,6 +91,7 @@ export function CaseSummarySection({ initialData }: CaseSummarySectionProps) {
                             id="desiredOutcome"
                             placeholder="Goal: Obtain judgment for $500K..."
                             className="min-h-[80px]"
+                            {...register('desiredOutcome')}
                         />
                     </div>
                 </div>
@@ -93,6 +102,7 @@ export function CaseSummarySection({ initialData }: CaseSummarySectionProps) {
                         id="strategyNotes"
                         placeholder="Attorney's strategic thinking..."
                         className="min-h-[100px] bg-yellow-50/50"
+                        {...register('caseStrategyNotes')}
                     />
                 </div>
             </CardContent>

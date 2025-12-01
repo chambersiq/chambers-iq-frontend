@@ -37,7 +37,7 @@ export interface ImportantDate {
 }
 
 export interface Case {
-    id: string
+    caseId: string
 
     // Basic Info
     caseNumber: string // Auto-generated or user-provided
@@ -111,4 +111,4 @@ export interface Case {
     createdBy: string
 }
 
-export type CaseFormData = Omit<Case, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'clientName'>
+export type CaseFormData = Omit<Case, 'caseId' | 'createdAt' | 'updatedAt' | 'createdBy' | 'clientName' | 'archived'>

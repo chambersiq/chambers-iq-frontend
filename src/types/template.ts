@@ -14,7 +14,8 @@ export interface TemplateVariable {
 }
 
 export interface Template {
-    id: string
+    templateId: string
+    companyId: string
     name: string
     description: string
     category: TemplateCategory
@@ -25,3 +26,5 @@ export interface Template {
     updatedAt: string
     createdBy: string
 }
+
+export type TemplateFormData = Omit<Template, 'templateId' | 'companyId' | 'createdAt' | 'updatedAt'> & { createdBy?: string }

@@ -28,49 +28,11 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import { Template, TemplateCategory } from '@/types/template'
+import { TemplateCategory } from '@/types/template'
 import { formatDate } from '@/lib/utils'
 import Link from 'next/link'
-
-// Mock data
-const MOCK_TEMPLATES: Template[] = [
-    {
-        id: '1',
-        name: 'Retainer Agreement',
-        description: 'Standard hourly fee retainer agreement for new clients.',
-        category: 'contract',
-        content: '',
-        variables: [],
-        isSystem: true,
-        createdAt: '2023-01-01T00:00:00Z',
-        updatedAt: '2023-06-15T00:00:00Z',
-        createdBy: 'System'
-    },
-    {
-        id: '2',
-        name: 'Motion to Dismiss',
-        description: 'General motion to dismiss under Rule 12(b)(6).',
-        category: 'motion',
-        content: '',
-        variables: [],
-        isSystem: true,
-        createdAt: '2023-01-01T00:00:00Z',
-        updatedAt: '2023-08-20T00:00:00Z',
-        createdBy: 'System'
-    },
-    {
-        id: '3',
-        name: 'Demand Letter',
-        description: 'Formal demand for payment or action.',
-        category: 'letter',
-        content: '',
-        variables: [],
-        isSystem: false,
-        createdAt: '2024-02-10T14:30:00Z',
-        updatedAt: '2024-02-10T14:30:00Z',
-        createdBy: 'John Doe'
-    }
-]
+import { useTemplates } from '@/hooks/api/useTemplates'
+import { useAuth } from '@/hooks/api/useCompany'
 
 const CATEGORY_COLORS: Record<TemplateCategory, string> = {
     'contract': 'default',
@@ -82,15 +44,23 @@ const CATEGORY_COLORS: Record<TemplateCategory, string> = {
 }
 
 export function TemplateList() {
+    const { user } = useAuth()
+    const companyId = user?.companyId || ''
+    const { data: templates = [], isLoading } = useTemplates(companyId)
+
     const [searchTerm, setSearchTerm] = useState('')
     const [categoryFilter, setCategoryFilter] = useState<string>('all')
 
-    const filteredTemplates = MOCK_TEMPLATES.filter(t => {
+    const filteredTemplates = templates.filter(t => {
         const matchesSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             t.description.toLowerCase().includes(searchTerm.toLowerCase())
         const matchesCategory = categoryFilter === 'all' || t.category === categoryFilter
         return matchesSearch && matchesCategory
     })
+
+    if (isLoading) {
+        return <div className="p-8 text-center text-slate-500">Loading templates...</div>
+    }
 
     return (
         <div className="space-y-4">
@@ -135,59 +105,67 @@ export function TemplateList() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {filteredTemplates.map((t) => (
-                            <TableRow key={t.id}>
-                                <TableCell className="font-medium">
-                                    <div className="flex flex-col">
-                                        <Link href={`/templates/${t.id}`} className="hover:underline text-blue-600 flex items-center gap-2">
-                                            <FileType className="h-4 w-4" />
-                                            {t.name}
-                                        </Link>
-                                        <span className="text-xs text-muted-foreground">{t.description}</span>
-                                    </div>
-                                </TableCell>
-                                <TableCell>
-                                    <Badge variant={CATEGORY_COLORS[t.category] as any} className="capitalize">
-                                        {t.category}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell className="text-sm text-muted-foreground">
-                                    {formatDate(t.updatedAt)}
-                                </TableCell>
-                                <TableCell className="text-sm">
-                                    {t.isSystem ? <Badge variant="secondary">System</Badge> : t.createdBy}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                                <span className="sr-only">Open menu</span>
-                                                <MoreHorizontal className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                            <DropdownMenuItem asChild>
-                                                <Link href={`/templates/${t.id}`}>
-                                                    <Edit className="mr-2 h-4 w-4" /> Edit Template
-                                                </Link>
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem>
-                                                <Copy className="mr-2 h-4 w-4" /> Duplicate
-                                            </DropdownMenuItem>
-                                            {!t.isSystem && (
-                                                <>
-                                                    <DropdownMenuSeparator />
-                                                    <DropdownMenuItem className="text-red-600">
-                                                        <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                                    </DropdownMenuItem>
-                                                </>
-                                            )}
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                        {filteredTemplates.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={5} className="h-24 text-center">
+                                    No templates found.
                                 </TableCell>
                             </TableRow>
-                        ))}
+                        ) : (
+                            filteredTemplates.map((t) => (
+                                <TableRow key={t.templateId}>
+                                    <TableCell className="font-medium">
+                                        <div className="flex flex-col">
+                                            <Link href={`/templates/${t.templateId}`} className="hover:underline text-blue-600 flex items-center gap-2">
+                                                <FileType className="h-4 w-4" />
+                                                {t.name}
+                                            </Link>
+                                            <span className="text-xs text-muted-foreground">{t.description}</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant={CATEGORY_COLORS[t.category] as any} className="capitalize">
+                                            {t.category}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-sm text-muted-foreground">
+                                        {formatDate(t.updatedAt)}
+                                    </TableCell>
+                                    <TableCell className="text-sm">
+                                        {t.isSystem ? <Badge variant="secondary">System</Badge> : t.createdBy}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                    <span className="sr-only">Open menu</span>
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href={`/templates/${t.templateId}`}>
+                                                        <Edit className="mr-2 h-4 w-4" /> Edit Template
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem>
+                                                    <Copy className="mr-2 h-4 w-4" /> Duplicate
+                                                </DropdownMenuItem>
+                                                {!t.isSystem && (
+                                                    <>
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuItem className="text-red-600">
+                                                            <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                                        </DropdownMenuItem>
+                                                    </>
+                                                )}
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
                     </TableBody>
                 </Table>
             </div>

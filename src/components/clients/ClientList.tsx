@@ -31,56 +31,26 @@ import {
 import { Client } from '@/types/client'
 import { formatDate } from '@/lib/utils'
 
-// Mock data for demonstration
-const MOCK_CLIENTS: Client[] = [
-    {
-        id: '1',
-        clientType: 'individual',
-        fullName: 'John Smith',
-        email: 'john.smith@example.com',
-        phone: '(555) 123-4567',
-        status: 'active',
-        totalCases: 2,
-        createdAt: '2024-01-15T10:00:00Z',
-        updatedAt: '2024-01-15T10:00:00Z'
-    },
-    {
-        id: '2',
-        clientType: 'company',
-        companyName: 'Acme Corp',
-        contactName: 'Jane Doe',
-        contactEmail: 'jane@acmecorp.com',
-        contactPhone: '(555) 987-6543',
-        status: 'active',
-        totalCases: 5,
-        createdAt: '2023-11-20T14:30:00Z',
-        updatedAt: '2024-01-10T09:15:00Z'
-    },
-    {
-        id: '3',
-        clientType: 'individual',
-        fullName: 'Robert Johnson',
-        email: 'bob.j@example.com',
-        phone: '(555) 555-5555',
-        status: 'inactive',
-        totalCases: 0,
-        createdAt: '2023-12-05T11:20:00Z',
-        updatedAt: '2023-12-05T11:20:00Z'
-    }
-]
+import { useAuth } from '@/hooks/api/useCompany'
+import { useClients } from '@/hooks/api/useClients'
 
 export function ClientList() {
+    const { user } = useAuth()
+    const { data: clients = [], isLoading, error } = useClients(user.companyId)
     const [searchTerm, setSearchTerm] = useState('')
     const [typeFilter, setTypeFilter] = useState<string>('all')
     const [statusFilter, setStatusFilter] = useState<string>('all')
 
+    if (isLoading) return <div>Loading clients...</div>
+    if (error) return <div>Error loading clients</div>
+
     // Filter clients
-    const filteredClients = MOCK_CLIENTS.filter(client => {
+    const filteredClients = clients.filter(client => {
         const matchesSearch =
             (client.clientType === 'individual' ? client.fullName : client.companyName)
-                .toLowerCase().includes(searchTerm.toLowerCase()) ||
+                ?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (client.clientType === 'individual' ? client.email : client.contactEmail)
-                .toLowerCase().includes(searchTerm.toLowerCase())
+                ?.toLowerCase().includes(searchTerm.toLowerCase())
 
         const matchesType = typeFilter === 'all' || client.clientType === typeFilter
         const matchesStatus = statusFilter === 'all' || client.status === statusFilter
@@ -148,7 +118,7 @@ export function ClientList() {
                             </TableRow>
                         ) : (
                             filteredClients.map((client) => (
-                                <TableRow key={client.id}>
+                                <TableRow key={client.clientId}>
                                     <TableCell className="font-medium">
                                         {client.clientType === 'individual' ? client.fullName : client.companyName}
                                         {client.clientType === 'company' && (

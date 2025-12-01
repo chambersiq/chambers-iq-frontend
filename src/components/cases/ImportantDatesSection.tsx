@@ -5,18 +5,17 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Plus, Trash2, Calendar as CalendarIcon } from 'lucide-react'
-import { useState } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
 import { cn, formatDate } from '@/lib/utils'
+import { useFormContext, Controller, useFieldArray } from 'react-hook-form'
 
 export function ImportantDatesSection() {
-    const [customDeadlines, setCustomDeadlines] = useState([0])
-    const [dates, setDates] = useState<Record<string, Date | undefined>>({})
-
-    const handleDateSelect = (key: string, date: Date | undefined) => {
-        setDates(prev => ({ ...prev, [key]: date }))
-    }
+    const { control, register } = useFormContext()
+    const { fields, append, remove } = useFieldArray({
+        control,
+        name: 'customDeadlines'
+    })
 
     return (
         <Card>
@@ -27,34 +26,58 @@ export function ImportantDatesSection() {
                 {/* Critical Dates */}
                 <div className="grid gap-6 md:grid-cols-2">
                     <div className="space-y-2">
-                        <Label htmlFor="sol" className="text-red-600 font-semibold">
-                            Statute of Limitations *
+                        <Label htmlFor="sol">
+                            Statute of Limitations
                         </Label>
-                        <DatePicker
-                            selected={dates.sol}
-                            onSelect={(date) => handleDateSelect('sol', date)}
-                            placeholder="Select critical deadline"
+                        <Controller
+                            control={control}
+                            name="statuteOfLimitationsDate"
+                            render={({ field }) => (
+                                <DatePicker
+                                    selected={field.value ? new Date(field.value) : undefined}
+                                    onSelect={(date) => field.onChange(date?.toISOString())}
+                                    placeholder="Select critical deadline"
+                                />
+                            )}
                         />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="filedDate">Case Filed Date</Label>
-                        <DatePicker
-                            selected={dates.filed}
-                            onSelect={(date) => handleDateSelect('filed', date)}
+                        <Controller
+                            control={control}
+                            name="caseFiledDate"
+                            render={({ field }) => (
+                                <DatePicker
+                                    selected={field.value ? new Date(field.value) : undefined}
+                                    onSelect={(date) => field.onChange(date?.toISOString())}
+                                />
+                            )}
                         />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="nextHearing">Next Hearing</Label>
-                        <DatePicker
-                            selected={dates.hearing}
-                            onSelect={(date) => handleDateSelect('hearing', date)}
+                        <Controller
+                            control={control}
+                            name="nextHearingDate"
+                            render={({ field }) => (
+                                <DatePicker
+                                    selected={field.value ? new Date(field.value) : undefined}
+                                    onSelect={(date) => field.onChange(date?.toISOString())}
+                                />
+                            )}
                         />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="trialDate">Trial Date</Label>
-                        <DatePicker
-                            selected={dates.trial}
-                            onSelect={(date) => handleDateSelect('trial', date)}
+                        <Controller
+                            control={control}
+                            name="trialDate"
+                            render={({ field }) => (
+                                <DatePicker
+                                    selected={field.value ? new Date(field.value) : undefined}
+                                    onSelect={(date) => field.onChange(date?.toISOString())}
+                                />
+                            )}
                         />
                     </div>
                 </div>
@@ -63,16 +86,28 @@ export function ImportantDatesSection() {
                 <div className="grid gap-6 md:grid-cols-2">
                     <div className="space-y-2">
                         <Label htmlFor="discoveryCutoff">Discovery Cutoff</Label>
-                        <DatePicker
-                            selected={dates.discovery}
-                            onSelect={(date) => handleDateSelect('discovery', date)}
+                        <Controller
+                            control={control}
+                            name="discoveryCutoff"
+                            render={({ field }) => (
+                                <DatePicker
+                                    selected={field.value ? new Date(field.value) : undefined}
+                                    onSelect={(date) => field.onChange(date?.toISOString())}
+                                />
+                            )}
                         />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="mediation">Mediation Date</Label>
-                        <DatePicker
-                            selected={dates.mediation}
-                            onSelect={(date) => handleDateSelect('mediation', date)}
+                        <Controller
+                            control={control}
+                            name="mediationDate"
+                            render={({ field }) => (
+                                <DatePicker
+                                    selected={field.value ? new Date(field.value) : undefined}
+                                    onSelect={(date) => field.onChange(date?.toISOString())}
+                                />
+                            )}
                         />
                     </div>
                 </div>
@@ -87,21 +122,30 @@ export function ImportantDatesSection() {
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() => setCustomDeadlines([...customDeadlines, customDeadlines.length])}
+                            onClick={() => append({ name: '', date: '' })}
                         >
                             <Plus className="mr-2 h-4 w-4" /> Add Deadline
                         </Button>
                     </div>
 
-                    {customDeadlines.map((index) => (
-                        <div key={index} className="flex gap-4 items-start">
+                    {fields.map((field, index) => (
+                        <div key={field.id} className="flex gap-4 items-start">
                             <div className="flex-1 space-y-2">
-                                <Input placeholder="Deadline Description (e.g. Expert Witness List)" />
+                                <Input
+                                    placeholder="Deadline Description (e.g. Expert Witness List)"
+                                    {...register(`customDeadlines.${index}.name`)}
+                                />
                             </div>
                             <div className="w-[240px] space-y-2">
-                                <DatePicker
-                                    selected={dates[`custom_${index}`]}
-                                    onSelect={(date) => handleDateSelect(`custom_${index}`, date)}
+                                <Controller
+                                    control={control}
+                                    name={`customDeadlines.${index}.date`}
+                                    render={({ field }) => (
+                                        <DatePicker
+                                            selected={field.value ? new Date(field.value) : undefined}
+                                            onSelect={(date) => field.onChange(date?.toISOString())}
+                                        />
+                                    )}
                                 />
                             </div>
                             <Button
@@ -109,7 +153,7 @@ export function ImportantDatesSection() {
                                 variant="ghost"
                                 size="icon"
                                 className="mt-0 text-muted-foreground hover:text-red-600"
-                                onClick={() => setCustomDeadlines(customDeadlines.filter(i => i !== index))}
+                                onClick={() => remove(index)}
                             >
                                 <Trash2 className="h-4 w-4" />
                             </Button>

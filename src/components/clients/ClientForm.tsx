@@ -8,20 +8,47 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { IndividualClientForm } from './IndividualClientForm'
 import { CompanyClientForm } from './CompanyClientForm'
 import { useRouter } from 'next/navigation'
+import { useForm } from 'react-hook-form'
+import { useCreateClient } from '@/hooks/api/useClients'
+import { useAuth } from '@/hooks/api/useCompany'
+import { toast } from 'sonner'
 
 export function ClientForm() {
     const router = useRouter()
+    const { user } = useAuth()
+    const companyId = user?.companyId
     const [clientType, setClientType] = useState<'individual' | 'company'>('individual')
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault()
-        // TODO: Handle form submission
-        console.log('Form submitted')
-        router.push('/clients')
+    const { register, handleSubmit, setValue, reset } = useForm()
+    const createClient = useCreateClient(companyId || '')
+
+    const onSubmit = (data: any) => {
+        if (!companyId) {
+            toast.error("Company ID is missing.")
+            return
+        }
+
+        const payload = {
+            ...data,
+            clientType: clientType,
+            // Ensure required fields for the specific type are present
+            // The API schema handles validation, but we can do some cleanup here if needed
+        }
+
+        createClient.mutate(payload, {
+            onSuccess: () => {
+                toast.success("Client created successfully.")
+                router.push('/clients')
+            },
+            onError: (error) => {
+                toast.error("Failed to create client. Please try again.")
+                console.error(error)
+            }
+        })
     }
 
     return (
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
             <div className="grid gap-6">
                 {/* Client Type Selection */}
                 <Card>
@@ -33,7 +60,9 @@ export function ClientForm() {
                         <RadioGroup
                             defaultValue="individual"
                             value={clientType}
-                            onValueChange={(value) => setClientType(value as 'individual' | 'company')}
+                            onValueChange={(value) => {
+                                setClientType(value as 'individual' | 'company')
+                            }}
                             className="grid grid-cols-2 gap-4"
                         >
                             <div>
@@ -73,7 +102,11 @@ export function ClientForm() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {clientType === 'individual' ? <IndividualClientForm /> : <CompanyClientForm />}
+                        {clientType === 'individual' ? (
+                            <IndividualClientForm register={register} setValue={setValue} />
+                        ) : (
+                            <CompanyClientForm register={register} setValue={setValue} />
+                        )}
                     </CardContent>
                 </Card>
 
@@ -82,7 +115,9 @@ export function ClientForm() {
                     <Button type="button" variant="outline" onClick={() => router.back()}>
                         Cancel
                     </Button>
-                    <Button type="submit">Create Client</Button>
+                    <Button type="submit" disabled={createClient.isPending}>
+                        {createClient.isPending ? 'Creating...' : 'Create Client'}
+                    </Button>
                 </div>
             </div>
         </form>

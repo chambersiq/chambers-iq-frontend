@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { FileText, Plus, Trash2, Download, Eye, Sparkles, ChevronDown, ChevronUp } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { useDocuments } from '@/hooks/api/useDocuments'
+import { useAuth } from '@/hooks/api/useCompany'
 
 // --- Helper Component for Inline Expandable Text ---
 function InlineExpandableText({ text, label, icon: Icon, className }: { text: string, label: string, icon?: any, className?: string }) {
@@ -51,25 +53,7 @@ function InlineExpandableText({ text, label, icon: Icon, className }: { text: st
 }
 
 // Mock Data Generator
-const generateMockDocs = (caseId: string): Document[] => {
-    const types: DocumentType[] = ['pleading', 'motion', 'evidence', 'correspondence']
-    return Array.from({ length: 8 }).map((_, i) => ({
-        id: `doc-${caseId}-${i}`,
-        caseId,
-        name: `${types[i % 4].charAt(0).toUpperCase() + types[i % 4].slice(1)} ${i + 1}.pdf`,
-        type: types[i % 4],
-        fileSize: 1024 * 1024 * (i + 1),
-        mimeType: 'application/pdf',
-        url: '#',
-        aiStatus: i % 3 === 0 ? 'completed' : 'pending',
-        // Add mock summaries with varying lengths
-        description: i % 2 === 0 ? "This document outlines the initial complaint filed by the plaintiff regarding the breach of contract. It details the specific clauses violated and the timeline of events leading up to the dispute." : undefined,
-        aiSummary: i % 3 === 0 ? "Key Points:\n- Plaintiff alleges breach of Section 4.2\n- Damages estimated at $50,000\n- Filed on Jan 15, 2024\n- Request for jury trial included in the filing." : undefined,
-        uploadedBy: 'John Doe',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-    }))
-}
+
 
 interface CaseDocumentViewProps {
     caseId: string
@@ -78,7 +62,9 @@ interface CaseDocumentViewProps {
 }
 
 export function CaseDocumentView({ caseId, caseName, readOnly = false }: CaseDocumentViewProps) {
-    const [documents, setDocuments] = useState<Document[]>(generateMockDocs(caseId))
+    const { user } = useAuth()
+    const companyId = user?.companyId || ''
+    const { data: documents = [], isLoading } = useDocuments(companyId, caseId)
 
     // Group documents by type
     const groupedDocs = documents.reduce((acc, doc) => {
@@ -88,7 +74,30 @@ export function CaseDocumentView({ caseId, caseName, readOnly = false }: CaseDoc
     }, {} as Record<DocumentType, Document[]>)
 
     const handleDelete = (id: string) => {
-        setDocuments(prev => prev.filter(d => d.id !== id))
+        // TODO: Implement delete when backend endpoint is ready
+        console.log("Delete document", id)
+    }
+
+    if (isLoading) {
+        return <div className="text-sm text-slate-500">Loading documents...</div>
+    }
+
+    if (documents.length === 0) {
+        return (
+            <div className="text-center py-12 bg-slate-50 rounded-lg border border-dashed">
+                <FileText className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-slate-900">No documents yet</h3>
+                <p className="text-slate-500 mb-6">Upload documents to get started with AI analysis.</p>
+                {!readOnly && (
+                    <Link href={`/cases/${caseId}/documents/new`}>
+                        <Button>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Upload Document
+                        </Button>
+                    </Link>
+                )}
+            </div>
+        )
     }
 
     return (

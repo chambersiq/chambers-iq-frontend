@@ -13,6 +13,9 @@ import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
 import { DocumentType } from '@/types/document'
 import { useRouter } from 'next/navigation'
+import { useCreateDocumentUrl } from '@/hooks/api/useDocuments'
+import { useAuth } from '@/hooks/api/useCompany'
+import { useQueryClient } from '@tanstack/react-query'
 
 interface QueueItem {
     id: string
@@ -32,6 +35,7 @@ interface BulkDocumentUploaderProps {
 
 export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDocumentUploaderProps) {
     const router = useRouter()
+    const queryClient = useQueryClient()
     const [queue, setQueue] = useState<QueueItem[]>([])
     const [isUploading, setIsUploading] = useState(false)
 
@@ -107,28 +111,54 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
         setQueue(prev => prev.filter(item => item.id !== id))
     }
 
-    const handleUploadAll = () => {
+    const { user } = useAuth()
+    const companyId = user?.companyId || ''
+    const createDocumentUrl = useCreateDocumentUrl(companyId)
+
+    const handleUploadAll = async () => {
         setIsUploading(true)
-        // Simulate upload
-        const interval = setInterval(() => {
-            setQueue(prev => {
-                const next = prev.map(u => ({
-                    ...u,
-                    progress: Math.min(u.progress + 10, 100)
-                }))
-                if (next.every(u => u.progress === 100)) {
-                    clearInterval(interval)
-                    setTimeout(() => {
-                        if (onComplete) {
-                            onComplete()
-                        } else {
-                            router.push(cancelHref)
-                        }
-                    }, 1000)
-                }
-                return next
-            })
-        }, 200)
+
+        // Process uploads sequentially (or parallel if needed, but sequential is safer for now)
+        for (const item of queue) {
+            try {
+                // 1. Get Presigned URL
+                const { uploadUrl } = await createDocumentUrl.mutateAsync({
+                    caseId: caseId || '', // Handle undefined caseId if needed
+                    name: item.file.name,
+                    type: item.type,
+                    fileSize: item.file.size,
+                    mimeType: item.file.type,
+                    description: item.summary
+                })
+
+                // 2. Upload to S3
+                await fetch(uploadUrl, {
+                    method: 'PUT',
+                    body: item.file,
+                    headers: {
+                        'Content-Type': item.file.type
+                    }
+                })
+
+                // 3. Update Progress to 100%
+                setQueue(prev => prev.map(q => q.id === item.id ? { ...q, progress: 100 } : q))
+
+            } catch (error) {
+                console.error(`Failed to upload ${item.title}:`, error)
+                // TODO: Handle error state in UI
+            }
+        }
+
+        setIsUploading(false)
+
+        // Invalidate queries to refresh document list
+        await queryClient.invalidateQueries({ queryKey: ['documents', companyId, caseId] })
+
+        if (onComplete) {
+            onComplete()
+        } else {
+            router.push(cancelHref)
+        }
     }
 
     return (

@@ -4,8 +4,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { UseFormRegister, FieldValues } from 'react-hook-form'
 
-export function CompanyClientForm() {
+interface CompanyClientFormProps {
+    register: UseFormRegister<FieldValues>
+    setValue: (name: string, value: any) => void
+}
+
+export function CompanyClientForm({ register, setValue }: CompanyClientFormProps) {
     return (
         <div className="space-y-6">
             {/* Company Information */}
@@ -14,15 +20,15 @@ export function CompanyClientForm() {
                 <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                         <Label htmlFor="companyName">Company Name *</Label>
-                        <Input id="companyName" placeholder="Acme Corp" required />
+                        <Input id="companyName" placeholder="Acme Corp" required {...register('companyName', { required: true })} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="dba">DBA / Trade Name</Label>
-                        <Input id="dba" placeholder="Acme Solutions" />
+                        <Input id="dba" placeholder="Acme Solutions" {...register('dbaName')} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="companyType">Company Type</Label>
-                        <Select>
+                        <Select onValueChange={(val) => setValue('companyType', val)}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select type" />
                             </SelectTrigger>
@@ -37,11 +43,11 @@ export function CompanyClientForm() {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="taxId">Tax ID / EIN</Label>
-                        <Input id="taxId" placeholder="12-3456789" />
+                        <Input id="taxId" placeholder="12-3456789" {...register('taxId')} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="industry">Industry</Label>
-                        <Select>
+                        <Select onValueChange={(val) => setValue('industry', val)}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select industry" />
                             </SelectTrigger>
@@ -57,7 +63,7 @@ export function CompanyClientForm() {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="website">Website</Label>
-                        <Input id="website" placeholder="https://example.com" />
+                        <Input id="website" placeholder="https://example.com" {...register('website')} />
                     </div>
                 </div>
             </div>
@@ -68,19 +74,19 @@ export function CompanyClientForm() {
                 <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                         <Label htmlFor="contactName">Contact Name *</Label>
-                        <Input id="contactName" placeholder="Jane Doe" required />
+                        <Input id="contactName" placeholder="Jane Doe" required {...register('contactName', { required: true })} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="contactTitle">Title</Label>
-                        <Input id="contactTitle" placeholder="CEO" />
+                        <Input id="contactTitle" placeholder="CEO" {...register('contactTitle')} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="contactEmail">Email *</Label>
-                        <Input id="contactEmail" type="email" placeholder="jane@example.com" required />
+                        <Input id="contactEmail" type="email" placeholder="jane@example.com" required {...register('contactEmail', { required: true })} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="contactPhone">Phone *</Label>
-                        <Input id="contactPhone" placeholder="(555) 123-4567" required />
+                        <Input id="contactPhone" placeholder="(555) 123-4567" required {...register('contactPhone', { required: true })} />
                     </div>
                 </div>
             </div>
@@ -90,20 +96,20 @@ export function CompanyClientForm() {
                 <h3 className="text-lg font-medium">Headquarters Address</h3>
                 <div className="space-y-2">
                     <Label htmlFor="hqAddress">Street Address</Label>
-                    <Input id="hqAddress" placeholder="123 Corporate Blvd" />
+                    <Input id="hqAddress" placeholder="123 Corporate Blvd" {...register('streetAddress')} />
                 </div>
                 <div className="grid gap-4 md:grid-cols-3">
                     <div className="space-y-2">
                         <Label htmlFor="hqCity">City</Label>
-                        <Input id="hqCity" placeholder="San Francisco" />
+                        <Input id="hqCity" placeholder="San Francisco" {...register('city')} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="hqState">State</Label>
-                        <Input id="hqState" placeholder="CA" />
+                        <Input id="hqState" placeholder="CA" {...register('state')} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="hqZip">ZIP Code</Label>
-                        <Input id="hqZip" placeholder="94105" />
+                        <Input id="hqZip" placeholder="94105" {...register('zipCode')} />
                     </div>
                 </div>
             </div>
@@ -117,6 +123,7 @@ export function CompanyClientForm() {
                         id="notes"
                         placeholder="Corporate structure, parent companies, etc."
                         className="min-h-[100px]"
+                        {...register('notes')}
                     />
                 </div>
             </div>

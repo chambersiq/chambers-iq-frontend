@@ -6,10 +6,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Plus, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { useFormContext, useFieldArray } from 'react-hook-form'
 
 export function PartiesSection() {
-    const [additionalParties, setAdditionalParties] = useState([0])
+    const { register, control, setValue } = useFormContext()
+    const { fields, append, remove } = useFieldArray({
+        control,
+        name: 'additionalParties'
+    })
 
     return (
         <Card>
@@ -25,11 +29,11 @@ export function PartiesSection() {
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
                             <Label htmlFor="opposingName">Opposing Party Name</Label>
-                            <Input id="opposingName" placeholder="XYZ Corp / John Doe" />
+                            <Input id="opposingName" placeholder="XYZ Corp / John Doe" {...register('opposingPartyName')} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="opposingType">Type</Label>
-                            <Select>
+                            <Select onValueChange={(val) => setValue('opposingPartyType', val)}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select type" />
                                 </SelectTrigger>
@@ -50,19 +54,19 @@ export function PartiesSection() {
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
                             <Label htmlFor="counselName">Counsel Name</Label>
-                            <Input id="counselName" placeholder="Jane Lawyer" />
+                            <Input id="counselName" placeholder="Jane Lawyer" {...register('opposingCounselName')} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="counselFirm">Law Firm</Label>
-                            <Input id="counselFirm" placeholder="Big Law LLP" />
+                            <Input id="counselFirm" placeholder="Big Law LLP" {...register('opposingCounselFirm')} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="counselEmail">Email</Label>
-                            <Input id="counselEmail" type="email" placeholder="jane@biglaw.com" />
+                            <Input id="counselEmail" type="email" placeholder="jane@biglaw.com" {...register('opposingCounselEmail')} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="counselPhone">Phone</Label>
-                            <Input id="counselPhone" placeholder="(555) 999-8888" />
+                            <Input id="counselPhone" placeholder="(555) 999-8888" {...register('opposingCounselPhone')} />
                         </div>
                     </div>
                 </div>
@@ -77,39 +81,37 @@ export function PartiesSection() {
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() => setAdditionalParties([...additionalParties, additionalParties.length])}
+                            onClick={() => append({ name: '', type: 'individual' })}
                         >
                             <Plus className="mr-2 h-4 w-4" /> Add Party
                         </Button>
                     </div>
 
-                    {additionalParties.map((index) => (
-                        <div key={index} className="rounded-md border p-4 relative">
+                    {fields.map((field, index) => (
+                        <div key={field.id} className="rounded-md border p-4 relative">
                             <Button
                                 type="button"
                                 variant="ghost"
                                 size="icon"
                                 className="absolute right-2 top-2 text-muted-foreground hover:text-red-600"
-                                onClick={() => setAdditionalParties(additionalParties.filter(i => i !== index))}
+                                onClick={() => remove(index)}
                             >
                                 <Trash2 className="h-4 w-4" />
                             </Button>
                             <div className="grid gap-4 md:grid-cols-2 pr-8">
                                 <div className="space-y-2">
                                     <Label>Name</Label>
-                                    <Input placeholder="Party Name" />
+                                    <Input placeholder="Party Name" {...register(`additionalParties.${index}.name`)} />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label>Role</Label>
-                                    <Select>
+                                    <Label>Type</Label>
+                                    <Select onValueChange={(val) => setValue(`additionalParties.${index}.type`, val)}>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select role" />
+                                            <SelectValue placeholder="Select type" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="co-defendant">Co-Defendant</SelectItem>
-                                            <SelectItem value="cross-defendant">Cross-Defendant</SelectItem>
-                                            <SelectItem value="intervener">Intervener</SelectItem>
-                                            <SelectItem value="witness">Key Witness</SelectItem>
+                                            <SelectItem value="individual">Individual</SelectItem>
+                                            <SelectItem value="company">Company</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>

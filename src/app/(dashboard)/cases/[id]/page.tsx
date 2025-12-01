@@ -21,17 +21,23 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { useAuth } from '@/hooks/api/useCompany'
+import { useCase } from '@/hooks/api/useCases'
+import { formatCurrency, formatDate } from '@/lib/utils'
 
 export default function CaseDetailPage({ params }: { params: { id: string } }) {
     const searchParams = useSearchParams()
     const router = useRouter()
+    const { user } = useAuth()
+    const companyId = user?.companyId || ''
     const [showUploadPrompt, setShowUploadPrompt] = useState(false)
 
-    // Notes State
+    const { data: caseData, isLoading } = useCase(companyId, params.id)
+
+    // Notes State (Mock for now as backend only has single string field)
     const [newNote, setNewNote] = useState('')
     const [notes, setNotes] = useState([
-        { id: 1, author: 'John Doe', date: '2 days ago', content: 'Met with client to discuss settlement options. They are open to mediation if the initial offer is above $300k.' },
-        { id: 2, author: 'John Doe', date: '3 days ago', content: 'Reviewed the latest discovery documents. Found some inconsistencies in the defendant\'s timeline.' }
+        { id: 1, author: 'System', date: 'Just now', content: 'Case created.' }
     ])
 
     const handleAddNote = () => {
@@ -39,7 +45,7 @@ export default function CaseDetailPage({ params }: { params: { id: string } }) {
 
         const note = {
             id: Date.now(),
-            author: 'John Doe', // Mock current user
+            author: user?.fullName || 'User',
             date: 'Just now',
             content: newNote
         }
@@ -53,6 +59,16 @@ export default function CaseDetailPage({ params }: { params: { id: string } }) {
             setShowUploadPrompt(true)
         }
     }, [searchParams])
+
+    if (isLoading) {
+        return <div className="p-8">Loading case details...</div>
+    }
+
+    if (!caseData) {
+        return <div className="p-8">Case not found</div>
+    }
+
+    const partyCount = 1 + (caseData.opposingPartyName ? 1 : 0) + (caseData.additionalParties?.length || 0)
 
     return (
         <div className="space-y-6">
@@ -81,11 +97,13 @@ export default function CaseDetailPage({ params }: { params: { id: string } }) {
             <div className="flex items-start justify-between">
                 <div>
                     <div className="flex items-center gap-3">
-                        <h1 className="text-3xl font-bold text-slate-900">Smith v. Jones</h1>
-                        <Badge variant="default">Active</Badge>
-                        <Badge variant="outline">Civil Litigation</Badge>
+                        <h1 className="text-3xl font-bold text-slate-900">{caseData.caseName}</h1>
+                        <Badge variant={caseData.status === 'active' ? 'default' : 'secondary'} className="capitalize">
+                            {caseData.status}
+                        </Badge>
+                        <Badge variant="outline" className="capitalize">{caseData.caseType.replace('-', ' ')}</Badge>
                     </div>
-                    <p className="mt-2 text-slate-600">Case #CV-2024-001 • Client: John Smith</p>
+                    <p className="mt-2 text-slate-600">Case #{caseData.caseNumber} • Client: {caseData.clientName}</p>
                 </div>
                 <div className="flex gap-3">
                     <Link href={`/cases/${params.id}/edit`}>
@@ -116,18 +134,18 @@ export default function CaseDetailPage({ params }: { params: { id: string } }) {
                             <CardTitle>Case Summary</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-slate-700 leading-relaxed">
-                                Breach of contract dispute regarding construction delays. Client alleges defendant failed to complete work by agreed deadline of June 2024, resulting in lost revenue. Defendant claims force majeure due to supply chain issues.
+                            <p className="text-slate-700 leading-relaxed whitespace-pre-line">
+                                {caseData.caseSummary || 'No summary provided.'}
                             </p>
 
                             <div className="mt-6 grid gap-6 md:grid-cols-2">
                                 <div className="rounded-lg bg-slate-50 p-4">
                                     <h4 className="font-semibold mb-2">Client Position</h4>
-                                    <p className="text-sm text-slate-600">Seeking $500k in damages plus legal fees.</p>
+                                    <p className="text-sm text-slate-600">{caseData.clientPosition || 'Not specified'}</p>
                                 </div>
                                 <div className="rounded-lg bg-slate-50 p-4">
                                     <h4 className="font-semibold mb-2">Opposing Position</h4>
-                                    <p className="text-sm text-slate-600">Denies liability, claims excusable delay.</p>
+                                    <p className="text-sm text-slate-600">{caseData.opposingPartyPosition || 'Not specified'}</p>
                                 </div>
                             </div>
                         </CardContent>
@@ -141,8 +159,10 @@ export default function CaseDetailPage({ params }: { params: { id: string } }) {
                                 <Calendar className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-red-600">5 Days</div>
-                                <p className="text-xs text-muted-foreground">Discovery Cutoff - Jan 22</p>
+                                <div className="text-2xl font-bold text-red-600">
+                                    {caseData.nextHearingDate ? formatDate(caseData.nextHearingDate) : 'None'}
+                                </div>
+                                <p className="text-xs text-muted-foreground">Next Hearing</p>
                             </CardContent>
                         </Card>
 
@@ -152,8 +172,8 @@ export default function CaseDetailPage({ params }: { params: { id: string } }) {
                                 <Users className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold">3</div>
-                                <p className="text-xs text-muted-foreground">Plaintiff, Defendant, Co-Defendant</p>
+                                <div className="text-2xl font-bold">{partyCount}</div>
+                                <p className="text-xs text-muted-foreground">Total Parties Involved</p>
                             </CardContent>
                         </Card>
 
@@ -163,8 +183,10 @@ export default function CaseDetailPage({ params }: { params: { id: string } }) {
                                 <DollarSign className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold">$500,000</div>
-                                <p className="text-xs text-muted-foreground">Damages Claimed</p>
+                                <div className="text-2xl font-bold">
+                                    {caseData.estimatedCaseValue ? formatCurrency(caseData.estimatedCaseValue) : '$0'}
+                                </div>
+                                <p className="text-xs text-muted-foreground">Estimated Value</p>
                             </CardContent>
                         </Card>
                     </div>
@@ -223,7 +245,7 @@ export default function CaseDetailPage({ params }: { params: { id: string } }) {
                     </div>
 
                     <div className="border rounded-xl p-6 bg-white">
-                        <CaseDocumentView caseId={params.id} caseName="" readOnly />
+                        <CaseDocumentView caseId={params.id} caseName={caseData.caseName} readOnly />
                     </div>
                 </TabsContent>
 

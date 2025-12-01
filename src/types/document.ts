@@ -38,3 +38,12 @@ export interface Document {
     tags?: string[]
     description?: string
 }
+
+export interface DocumentCreate {
+    caseId: string
+    name: string
+    type: DocumentType
+    fileSize: number
+    mimeType: string
+    description?: string
+}

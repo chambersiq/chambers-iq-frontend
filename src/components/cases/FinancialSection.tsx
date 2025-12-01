@@ -4,10 +4,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useState } from 'react'
+import { useFormContext } from 'react-hook-form'
 
 export function FinancialSection() {
-    const [feeType, setFeeType] = useState('hourly')
+    const { register, setValue, watch } = useFormContext()
+    const feeArrangement = watch('feeArrangement') || 'hourly'
 
     return (
         <Card>
@@ -18,7 +19,10 @@ export function FinancialSection() {
                 <div className="grid gap-6 md:grid-cols-2">
                     <div className="space-y-2">
                         <Label htmlFor="feeArrangement">Fee Arrangement</Label>
-                        <Select value={feeType} onValueChange={setFeeType}>
+                        <Select
+                            onValueChange={(val) => setValue('feeArrangement', val)}
+                            defaultValue={feeArrangement}
+                        >
                             <SelectTrigger>
                                 <SelectValue placeholder="Select type" />
                             </SelectTrigger>
@@ -32,24 +36,39 @@ export function FinancialSection() {
                         </Select>
                     </div>
 
-                    {feeType === 'hourly' && (
+                    {feeArrangement === 'hourly' && (
                         <div className="space-y-2">
                             <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
-                            <Input id="hourlyRate" type="number" placeholder="400" />
+                            <Input
+                                id="hourlyRate"
+                                type="number"
+                                placeholder="400"
+                                {...register('hourlyBillingRate', { valueAsNumber: true })}
+                            />
                         </div>
                     )}
 
-                    {feeType === 'contingency' && (
+                    {feeArrangement === 'contingency' && (
                         <div className="space-y-2">
                             <Label htmlFor="contingency">Contingency Percentage (%)</Label>
-                            <Input id="contingency" type="number" placeholder="33.33" />
+                            <Input
+                                id="contingency"
+                                type="number"
+                                placeholder="33.33"
+                                {...register('contingencyFeePercent', { valueAsNumber: true })}
+                            />
                         </div>
                     )}
 
-                    {feeType === 'flat-fee' && (
+                    {feeArrangement === 'flat-fee' && (
                         <div className="space-y-2">
                             <Label htmlFor="flatFee">Flat Fee Amount ($)</Label>
-                            <Input id="flatFee" type="number" placeholder="5000" />
+                            <Input
+                                id="flatFee"
+                                type="number"
+                                placeholder="5000"
+                                {...register('flatFeeAmount', { valueAsNumber: true })}
+                            />
                         </div>
                     )}
                 </div>
@@ -57,15 +76,30 @@ export function FinancialSection() {
                 <div className="grid gap-6 md:grid-cols-3">
                     <div className="space-y-2">
                         <Label htmlFor="retainer">Retainer Amount ($)</Label>
-                        <Input id="retainer" type="number" placeholder="5000" />
+                        <Input
+                            id="retainer"
+                            type="number"
+                            placeholder="5000"
+                            {...register('retainerAmount', { valueAsNumber: true })}
+                        />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="estimatedValue">Est. Case Value ($)</Label>
-                        <Input id="estimatedValue" type="number" placeholder="100000" />
+                        <Input
+                            id="estimatedValue"
+                            type="number"
+                            placeholder="100000"
+                            {...register('estimatedCaseValue', { valueAsNumber: true })}
+                        />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="damages">Damages Claimed ($)</Label>
-                        <Input id="damages" type="number" placeholder="75000" />
+                        <Input
+                            id="damages"
+                            type="number"
+                            placeholder="75000"
+                            {...register('clientDamagesClaimed', { valueAsNumber: true })}
+                        />
                     </div>
                 </div>
             </CardContent>

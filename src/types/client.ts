@@ -4,7 +4,7 @@ export type ClientType = 'individual' | 'company'
 export type ClientStatus = 'active' | 'inactive'
 
 export interface IndividualClient {
-    id: string
+    clientId: string
     clientType: 'individual'
 
     // Personal Information
@@ -43,7 +43,7 @@ export interface IndividualClient {
 }
 
 export interface CompanyClient {
-    id: string
+    clientId: string
     clientType: 'company'
 
     // Company Information
