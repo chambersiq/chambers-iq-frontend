@@ -7,8 +7,8 @@ export function useCases(companyId: string, clientId?: string) {
         queryKey: ['cases', companyId, clientId],
         queryFn: async () => {
             const url = clientId && clientId !== 'all'
-                ? `/${companyId}/${companyId}/clients/${clientId}/cases`
-                : `/${companyId}/${companyId}/cases`;
+                ? `/${companyId}/clients/${clientId}/cases`
+                : `/${companyId}/cases`;
             const { data } = await api.get<Case[]>(url);
             return data;
         },
@@ -59,7 +59,7 @@ export function useDeleteCase(companyId: string) {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async ({ clientId, caseId }: { clientId: string, caseId: string }) => {
-            await api.delete(`/${companyId}/${companyId}/clients/${clientId}/cases/${caseId}`);
+            await api.delete(`/${companyId}/clients/${clientId}/cases/${caseId}`);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['cases', companyId] });

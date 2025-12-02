@@ -6,7 +6,7 @@ export function useDocuments(companyId: string, caseId: string) {
     return useQuery({
         queryKey: ['documents', companyId, caseId],
         queryFn: async () => {
-            const { data } = await api.get<Document[]>(`/${companyId}/${companyId}/cases/${caseId}/documents`);
+            const { data } = await api.get<Document[]>(`/${companyId}/cases/${caseId}/documents`);
             return data;
         },
         enabled: !!companyId && !!caseId,
@@ -17,7 +17,7 @@ export function useDocument(companyId: string, documentId: string) {
     return useQuery({
         queryKey: ['document', companyId, documentId],
         queryFn: async () => {
-            const { data } = await api.get<Document>(`/${companyId}/${companyId}/documents/${documentId}`);
+            const { data } = await api.get<Document>(`/${companyId}/documents/${documentId}`);
             return data;
         },
         enabled: !!companyId && !!documentId,
@@ -27,7 +27,7 @@ export function useDocument(companyId: string, documentId: string) {
 export function useCreateDocumentUrl(companyId: string) {
     return useMutation({
         mutationFn: async (docData: DocumentCreate) => {
-            const { data } = await api.post<{ document: Document, uploadUrl: string }>(`/${companyId}/${companyId}/documents/upload-url`, docData);
+            const { data } = await api.post<{ document: Document, uploadUrl: string }>(`/${companyId}/documents/upload-url`, docData);
             return data;
         },
     });
