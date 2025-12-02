@@ -76,5 +76,7 @@ export const authOptions: NextAuthOptions = {
     session: {
         strategy: "jwt",
     },
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: process.env.NEXTAUTH_SECRET || "temporary-fallback-secret",
 }
+
+console.log("Auth Options Loaded. Secret present:", !!process.env.NEXTAUTH_SECRET);
