@@ -17,7 +17,7 @@ export function useClient(companyId: string, clientId: string) {
     return useQuery({
         queryKey: ['client', companyId, clientId],
         queryFn: async () => {
-            const { data } = await api.get<Client>(`/${companyId}/${companyId}/clients/${clientId}`);
+            const { data } = await api.get<Client>(`/${companyId}/clients/${clientId}`);
             return data;
         },
         enabled: !!companyId && !!clientId,
@@ -28,7 +28,7 @@ export function useCreateClient(companyId: string) {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (newClient: ClientFormData) => {
-            const { data } = await api.post<Client>(`/${companyId}/${companyId}/clients`, newClient);
+            const { data } = await api.post<Client>(`/${companyId}/clients`, newClient);
             return data;
         },
         onSuccess: () => {
