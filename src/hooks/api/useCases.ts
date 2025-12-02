@@ -21,7 +21,7 @@ export function useCase(companyId: string, caseId: string) {
         queryKey: ['case', companyId, caseId],
         queryFn: async () => {
             // Use the new direct endpoint
-            const { data } = await api.get<Case>(`/${companyId}/${companyId}/cases/${caseId}`);
+            const { data } = await api.get<Case>(`/${companyId}/cases/${caseId}`);
             return data;
         },
         enabled: !!companyId && !!caseId,
@@ -32,7 +32,7 @@ export function useCreateCase(companyId: string) {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async ({ clientId, data }: { clientId: string, data: CaseFormData }) => {
-            const { data: response } = await api.post<Case>(`/${companyId}/${companyId}/clients/${clientId}/cases`, data);
+            const { data: response } = await api.post<Case>(`/${companyId}/clients/${clientId}/cases`, data);
             return response;
         },
         onSuccess: () => {
@@ -45,7 +45,7 @@ export function useUpdateCase(companyId: string) {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async ({ clientId, caseId, data }: { clientId: string, caseId: string, data: Partial<CaseFormData> }) => {
-            const { data: response } = await api.put<Case>(`/${companyId}/${companyId}/clients/${clientId}/cases/${caseId}`, data);
+            const { data: response } = await api.put<Case>(`/${companyId}/clients/${clientId}/cases/${caseId}`, data);
             return response;
         },
         onSuccess: (data) => {

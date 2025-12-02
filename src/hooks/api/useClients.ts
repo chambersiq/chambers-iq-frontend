@@ -6,7 +6,7 @@ export function useClients(companyId: string) {
     return useQuery({
         queryKey: ['clients', companyId],
         queryFn: async () => {
-            const { data } = await api.get<Client[]>(`/${companyId}/${companyId}/clients`);
+            const { data } = await api.get<Client[]>(`/${companyId}/clients`);
             return data;
         },
         enabled: !!companyId,
