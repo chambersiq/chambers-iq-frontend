@@ -136,7 +136,7 @@ export function CaseList() {
                                     ? client.fullName
                                     : client.companyName;
                                 return (
-                                    <SelectItem key={client.id} value={client.id}>
+                                    <SelectItem key={client.clientId} value={client.clientId}>
                                         {label}
                                     </SelectItem>
                                 )
