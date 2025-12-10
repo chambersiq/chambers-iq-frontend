@@ -66,3 +66,45 @@ export function useGenerateTemplate(companyId: string) {
         },
     });
 }
+
+export function useStartWorkflow(companyId: string) {
+    return useMutation({
+        mutationFn: async (data: { sampleDocs: string[] }) => {
+            const { data: response } = await api.post<{ threadId: string, status: string }>(`/ai/workflow/start`, { ...data, companyId });
+            return response;
+        }
+    });
+}
+
+export function useGetWorkflowStatus(threadId: string | null) {
+    return useQuery({
+        queryKey: ['workflow', threadId],
+        queryFn: async () => {
+            if (!threadId) return null;
+            const { data } = await api.get<{
+                status: string,
+                currentStep: string,
+                template?: string,
+                attorneyFeedback?: string
+            }>(`/ai/workflow/${threadId}`);
+            return data;
+        },
+        enabled: !!threadId,
+        refetchInterval: (query) => {
+            const status = query.state.data?.status;
+            if (status === 'awaiting_attorney_review' || status === 'completed') {
+                return false;
+            }
+            return 2000;
+        }
+    });
+}
+
+export function useReviewWorkflow(threadId: string) {
+    return useMutation({
+        mutationFn: async (data: { approved: boolean, feedback?: string }) => {
+            const { data: response } = await api.post(`/ai/workflow/${threadId}/review`, data);
+            return response;
+        }
+    });
+}

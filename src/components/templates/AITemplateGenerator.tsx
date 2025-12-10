@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Sparkles, Loader2, Upload, FileText, X } from 'lucide-react'
-import { useUploadTemplateSample, useGenerateTemplate } from '@/hooks/api/useTemplates'
+import { useUploadTemplateSample, useStartWorkflow } from '@/hooks/api/useTemplates'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/api/useCompany'
 import { toast } from 'sonner'
 import { v4 as uuidv4 } from 'uuid'
@@ -20,11 +21,14 @@ export function AITemplateGenerator({ onGenerate }: AITemplateGeneratorProps) {
 
     // Hooks
     const uploadSample = useUploadTemplateSample(companyId)
-    const generateTemplate = useGenerateTemplate(companyId)
+    // const generateTemplate = useGenerateTemplate(companyId) // Replaced by workflow
+    const startWorkflow = useStartWorkflow(companyId)
+    const router = useRouter()
 
     const [prompt, setPrompt] = useState('')
     const [files, setFiles] = useState<File[]>([])
     const [isGenerating, setIsGenerating] = useState(false)
+    const [isSimulation, setIsSimulation] = useState(false)
     const [isOpen, setIsOpen] = useState(false)
     const [statusMessage, setStatusMessage] = useState('')
     const fileInputRef = useRef<HTMLInputElement>(null)
@@ -39,14 +43,21 @@ export function AITemplateGenerator({ onGenerate }: AITemplateGeneratorProps) {
         setFiles(prev => prev.filter((_, i) => i !== index))
     }
 
-    const handleGenerate = async () => {
-        if (!prompt) return
+    const readFileAsText = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = (e) => resolve(e.target?.result as string || '')
+            reader.onerror = (e) => reject(e)
+            reader.readAsText(file)
+        })
+    }
 
+    const handleGenerate = async () => {
         setIsGenerating(true)
         const generationId = uuidv4()
 
         try {
-            // Step 1: Upload Documents
+            // Step 1: Upload Documents (Keep for record)
             if (files.length > 0) {
                 setStatusMessage('Uploading sample documents...')
                 const uploadPromises = files.map(file =>
@@ -55,14 +66,27 @@ export function AITemplateGenerator({ onGenerate }: AITemplateGeneratorProps) {
                 await Promise.all(uploadPromises)
             }
 
-            // Step 2: Generate Template
-            setStatusMessage('Generating template with AI...')
-            const result = await generateTemplate.mutateAsync({ generationId, prompt })
+            // Step 2: Start Agent Workflow
+            setStatusMessage('Starting Template Architect Agent...')
 
-            // Step 3: Done
-            setStatusMessage('Done!')
+            // Read files content for the agent
+            const fileContents = await Promise.all(files.map(file => readFileAsText(file)))
+
+            // Add prompt as a "sample" or context if needed, but for now agent expects samples
+            // We can prepend the prompt to the first sample or send it separately if we update backend
+            // For MVP, valid assumption: Files are samples.
+
+            const result = await startWorkflow.mutateAsync({
+                sampleDocs: fileContents,
+                // @ts-ignore - Backend expects snake_case, frontend camelCase/any
+                is_simulation: isSimulation
+            })
+
+            // Step 3: Redirect
+            setStatusMessage('Agent started! Redirecting...')
             setIsOpen(false)
-            onGenerate(result.content)
+
+            router.push(`/templates/new?source=ai&thread_id=${result.threadId}`)
 
             // Reset
             setPrompt('')
@@ -71,8 +95,8 @@ export function AITemplateGenerator({ onGenerate }: AITemplateGeneratorProps) {
 
         } catch (error) {
             console.error(error)
-            toast.error("Failed to generate template", {
-                description: "There was an error processing your request. Please try again."
+            toast.error("Failed to start agent", {
+                description: "There was an error starting the workflow. Please try again."
             })
         } finally {
             setIsGenerating(false)
@@ -151,11 +175,23 @@ export function AITemplateGenerator({ onGenerate }: AITemplateGeneratorProps) {
                             )}
                         </div>
                     </div>
+                    <div className="flex items-center space-x-2 pt-2 border-t mt-4">
+                        <input
+                            type="checkbox"
+                            id="simulation"
+                            checked={isSimulation}
+                            onChange={(e) => setIsSimulation(e.target.checked)}
+                            className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                        />
+                        <Label htmlFor="simulation" className="text-sm font-normal text-muted-foreground cursor-pointer">
+                            Enable Simulation Mode (Mock LLM Response)
+                        </Label>
+                    </div>
                 </div>
 
                 <DialogFooter>
                     <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
-                    <Button onClick={handleGenerate} disabled={!prompt || isGenerating}>
+                    <Button onClick={handleGenerate} disabled={isGenerating || (files.length === 0 && !prompt)}>
                         {isGenerating ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -164,7 +200,7 @@ export function AITemplateGenerator({ onGenerate }: AITemplateGeneratorProps) {
                         ) : (
                             <>
                                 <Sparkles className="mr-2 h-4 w-4" />
-                                Generate Template
+                                Start Agent Analysis
                             </>
                         )}
                     </Button>
