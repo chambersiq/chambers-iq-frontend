@@ -53,8 +53,9 @@ export interface Case {
     clientPosition?: string
     opposingPartyPosition?: string
     keyFacts?: string[]
+    keyFacts?: string[]
     legalIssues?: string
-    desiredOutcome?: string
+    prayer?: string
     caseStrategyNotes?: string
 
     // Case Details

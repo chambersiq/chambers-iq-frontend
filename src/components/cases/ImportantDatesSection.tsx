@@ -27,7 +27,7 @@ export function ImportantDatesSection() {
                 <div className="grid gap-6 md:grid-cols-2">
                     <div className="space-y-2">
                         <Label htmlFor="sol">
-                            Statute of Limitations
+                            Limitation Period Expiry
                         </Label>
                         <Controller
                             control={control}
@@ -36,7 +36,7 @@ export function ImportantDatesSection() {
                                 <DatePicker
                                     selected={field.value ? new Date(field.value) : undefined}
                                     onSelect={(date) => field.onChange(date?.toISOString())}
-                                    placeholder="Select critical deadline"
+                                    placeholder="Select limitation date"
                                 />
                             )}
                         />
@@ -68,7 +68,7 @@ export function ImportantDatesSection() {
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="trialDate">Trial Date</Label>
+                        <Label htmlFor="trialDate">Final Hearing Date</Label>
                         <Controller
                             control={control}
                             name="trialDate"
@@ -82,10 +82,10 @@ export function ImportantDatesSection() {
                     </div>
                 </div>
 
-                {/* Discovery & Motions */}
+                {/* Evidence & Motions */}
                 <div className="grid gap-6 md:grid-cols-2">
                     <div className="space-y-2">
-                        <Label htmlFor="discoveryCutoff">Discovery Cutoff</Label>
+                        <Label htmlFor="discoveryCutoff">Evidence Closure / Doc Stage</Label>
                         <Controller
                             control={control}
                             name="discoveryCutoff"

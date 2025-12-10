@@ -29,7 +29,7 @@ export function PartiesSection() {
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
                             <Label htmlFor="opposingName">Opposing Party Name</Label>
-                            <Input id="opposingName" placeholder="XYZ Corp / John Doe" {...register('opposingPartyName')} />
+                            <Input id="opposingName" placeholder="XYZ Corp / Rajesh Gupta" {...register('opposingPartyName')} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="opposingType">Type</Label>
@@ -59,8 +59,8 @@ export function PartiesSection() {
                     </h3>
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                            <Label htmlFor="counselName">Counsel Name</Label>
-                            <Input id="counselName" placeholder="Jane Lawyer" {...register('opposingCounselName')} />
+                            <Label htmlFor="counselName">Advocate Name</Label>
+                            <Input id="counselName" placeholder="Adv. Jane Sharma" {...register('opposingCounselName')} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="counselFirm">Law Firm</Label>

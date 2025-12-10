@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,13 +9,15 @@ import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Upload, X, FileText, Sparkles, Plus, Trash2 } from 'lucide-react'
+import { Upload, X, FileText, Sparkles, Plus, Trash2, Filter } from 'lucide-react'
 import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
 import { DocumentType } from '@/types/document'
 import { useRouter } from 'next/navigation'
 import { useCreateDocumentUrl } from '@/hooks/api/useDocuments'
 import { useAuth } from '@/hooks/api/useCompany'
+import { useCases } from '@/hooks/api/useCases'
+import { useClients } from '@/hooks/api/useClients'
 import { useQueryClient } from '@tanstack/react-query'
 
 interface QueueItem {
@@ -26,6 +28,7 @@ interface QueueItem {
     summary: string
     aiGenerate: boolean
     progress: number
+    caseId?: string // Store targeted caseId per item if needed, though we use global selection for now
 }
 
 interface BulkDocumentUploaderProps {
@@ -37,8 +40,31 @@ interface BulkDocumentUploaderProps {
 export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDocumentUploaderProps) {
     const router = useRouter()
     const queryClient = useQueryClient()
+    const { user } = useAuth()
+    const companyId = user?.companyId || ''
+
+    // Fetch Data
+    const { data: cases = [] } = useCases(companyId)
+    const { data: clients = [] } = useClients(companyId)
+
     const [queue, setQueue] = useState<QueueItem[]>([])
     const [isUploading, setIsUploading] = useState(false)
+
+    // Context Selection State
+    const [selectedClientId, setSelectedClientId] = useState<string>('')
+    const [selectedCaseId, setSelectedCaseId] = useState<string>(caseId || '')
+
+    // Effect: Sync state with prop if it changes
+    useEffect(() => {
+        if (caseId) {
+            setSelectedCaseId(caseId)
+        }
+    }, [caseId])
+
+    // Filter cases based on selected client
+    const filteredCases = selectedClientId
+        ? cases.filter((c: any) => c.clientId === selectedClientId)
+        : [];
 
     // Form State
     const [title, setTitle] = useState('')
@@ -86,6 +112,12 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
     const addToQueue = () => {
         if (selectedFiles.length === 0 || !title) return
 
+        // Validation: Require Case Selection
+        if (!selectedCaseId && !caseId) {
+            // Ideally assume UI handles this, but good to block
+            return
+        }
+
         const newItems: QueueItem[] = selectedFiles.map((file, index) => ({
             id: Math.random().toString(36).substring(7),
             file: file,
@@ -112,11 +144,11 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
         setQueue(prev => prev.filter(item => item.id !== id))
     }
 
-    const { user } = useAuth()
-    const companyId = user?.companyId || ''
     const createDocumentUrl = useCreateDocumentUrl(companyId)
 
     const handleUploadAll = async () => {
+        if (!selectedCaseId) return
+
         setIsUploading(true)
 
         // Process uploads sequentially (or parallel if needed, but sequential is safer for now)
@@ -124,7 +156,7 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
             try {
                 // 1. Get Presigned URL
                 const { document, uploadUrl } = await createDocumentUrl.mutateAsync({
-                    caseId: caseId || '', // Handle undefined caseId if needed
+                    caseId: selectedCaseId,
                     name: item.file.name,
                     type: item.type,
                     fileSize: item.file.size,
@@ -178,6 +210,68 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-6 space-y-6">
+
+                        {/* 0. Client & Case Selection (Only if caseId not provided) */}
+                        {!caseId && (
+                            <div className="space-y-4 p-4 border rounded-lg bg-slate-50">
+                                <h3 className="font-medium text-blue-900 flex items-center gap-2">
+                                    <Filter className="h-4 w-4" />
+                                    Target Context
+                                </h3>
+
+                                {/* Client Selector */}
+                                <div className="space-y-2">
+                                    <Label>Client <span className="text-red-500">*</span></Label>
+                                    <Select
+                                        value={selectedClientId}
+                                        onValueChange={(val) => {
+                                            setSelectedClientId(val)
+                                            setSelectedCaseId('') // Reset case when client changes
+                                        }}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a client..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {clients.map((client: any) => (
+                                                <SelectItem key={client.clientId} value={client.clientId}>
+                                                    {client.clientType === 'individual' ? client.fullName : client.companyName}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                {/* Case Selector */}
+                                <div className="space-y-2">
+                                    <Label>Case <span className="text-red-500">*</span></Label>
+                                    <Select
+                                        value={selectedCaseId}
+                                        onValueChange={setSelectedCaseId}
+                                        disabled={!selectedClientId}
+                                    >
+                                        <SelectTrigger className={!selectedCaseId && selectedClientId ? "border-amber-400 bg-amber-50" : ""}>
+                                            <SelectValue placeholder={selectedClientId ? "Select a case..." : "Select client first"} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {filteredCases.map((c: any) => (
+                                                <SelectItem key={c.caseId} value={c.caseId}>
+                                                    {c.caseName} ({c.caseNumber || 'No Number'})
+                                                </SelectItem>
+                                            ))}
+                                            {selectedClientId && filteredCases.length === 0 && (
+                                                <SelectItem value="no-cases" disabled>No active cases found for this client</SelectItem>
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                    {!selectedCaseId && selectedClientId && (
+                                        <p className="text-xs text-amber-600 font-medium animate-pulse">
+                                            Please select a case to proceed.
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
                         {/* 1. Metadata Fields */}
                         <div className="space-y-4">
@@ -297,7 +391,7 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
                         <Button
                             className="w-full"
                             onClick={addToQueue}
-                            disabled={selectedFiles.length === 0 || !title}
+                            disabled={selectedFiles.length === 0 || !title || !selectedCaseId}
                         >
                             Add {selectedFiles.length} Documents to Queue
                         </Button>

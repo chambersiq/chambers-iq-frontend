@@ -20,19 +20,19 @@ export function IndividualClientForm({ register, setValue }: IndividualClientFor
                 <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                         <Label htmlFor="fullName">Full Name *</Label>
-                        <Input id="fullName" placeholder="John Doe" required {...register('fullName', { required: true })} />
+                        <Input id="fullName" placeholder="Amit Verma" required {...register('fullName', { required: true })} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="email">Email *</Label>
-                        <Input id="email" type="email" placeholder="john@example.com" required {...register('email', { required: true })} />
+                        <Input id="email" type="email" placeholder="amit.verma@example.com" required {...register('email', { required: true })} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="phone">Phone Number *</Label>
-                        <Input id="phone" placeholder="(555) 123-4567" required {...register('phone', { required: true })} />
+                        <Input id="phone" placeholder="+91 98765 43210" required {...register('phone', { required: true })} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="alternatePhone">Alternate Phone</Label>
-                        <Input id="alternatePhone" placeholder="(555) 987-6543" {...register('alternatePhone')} />
+                        <Input id="alternatePhone" placeholder="+91 98765 43210" {...register('alternatePhone')} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="dob">Date of Birth</Label>
@@ -53,8 +53,8 @@ export function IndividualClientForm({ register, setValue }: IndividualClientFor
                         </Select>
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="ssn">SSN (Last 4)</Label>
-                        <Input id="ssn" placeholder="1234" maxLength={4} {...register('ssn')} />
+                        <Label htmlFor="pan">PAN Number</Label>
+                        <Input id="pan" placeholder="ABCDE1234F" maxLength={10} className="uppercase" {...register('pan')} />
                     </div>
                 </div>
             </div>
@@ -64,20 +64,20 @@ export function IndividualClientForm({ register, setValue }: IndividualClientFor
                 <h3 className="text-lg font-medium">Address</h3>
                 <div className="space-y-2">
                     <Label htmlFor="streetAddress">Street Address</Label>
-                    <Input id="streetAddress" placeholder="123 Main St" {...register('streetAddress')} />
+                    <Input id="streetAddress" placeholder="Flat 402, Galaxy Apartments" {...register('streetAddress')} />
                 </div>
                 <div className="grid gap-4 md:grid-cols-3">
                     <div className="space-y-2">
                         <Label htmlFor="city">City</Label>
-                        <Input id="city" placeholder="New York" {...register('city')} />
+                        <Input id="city" placeholder="Mumbai" {...register('city')} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="state">State</Label>
-                        <Input id="state" placeholder="NY" {...register('state')} />
+                        <Input id="state" placeholder="Maharashtra" {...register('state')} />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="zipCode">ZIP Code</Label>
-                        <Input id="zipCode" placeholder="10001" {...register('zipCode')} />
+                        <Label htmlFor="pincode">Pincode</Label>
+                        <Input id="pincode" placeholder="400001" maxLength={6} {...register('pincode')} />
                     </div>
                 </div>
             </div>

@@ -43,11 +43,16 @@ export default function DashboardPage() {
                     </CardHeader>
                     <CardContent>
                         {isLoading ? (
-                            <Skeleton className="h-8 w-20" />
+                            <div className="space-y-2">
+                                <Skeleton className="h-8 w-16" />
+                                <Skeleton className="h-3 w-32" />
+                            </div>
                         ) : (
-                            <div className="text-2xl font-bold">{stats?.activeClients || 0}</div>
+                            <>
+                                <div className="text-2xl font-bold">{stats?.activeClients || 0}</div>
+                                <p className="text-xs text-slate-500">+{stats?.newClientsThisMonth || 0} from last month</p>
+                            </>
                         )}
-                        <p className="text-xs text-slate-500">+{stats?.newClientsThisMonth || 0} from last month</p>
                     </CardContent>
                 </Card>
 
@@ -58,11 +63,16 @@ export default function DashboardPage() {
                     </CardHeader>
                     <CardContent>
                         {isLoading ? (
-                            <Skeleton className="h-8 w-20" />
+                            <div className="space-y-2">
+                                <Skeleton className="h-8 w-16" />
+                                <Skeleton className="h-3 w-32" />
+                            </div>
                         ) : (
-                            <div className="text-2xl font-bold">{stats?.activeCases || 0}</div>
+                            <>
+                                <div className="text-2xl font-bold">{stats?.activeCases || 0}</div>
+                                <p className="text-xs text-slate-500">+{stats?.newCasesThisWeek || 0} new this week</p>
+                            </>
                         )}
-                        <p className="text-xs text-slate-500">+{stats?.newCasesThisWeek || 0} new this week</p>
                     </CardContent>
                 </Card>
 
@@ -73,11 +83,16 @@ export default function DashboardPage() {
                     </CardHeader>
                     <CardContent>
                         {isLoading ? (
-                            <Skeleton className="h-8 w-20" />
+                            <div className="space-y-2">
+                                <Skeleton className="h-8 w-16" />
+                                <Skeleton className="h-3 w-32" />
+                            </div>
                         ) : (
-                            <div className="text-2xl font-bold">{stats?.documentsProcessed || 0}</div>
+                            <>
+                                <div className="text-2xl font-bold">{stats?.documentsProcessed || 0}</div>
+                                <p className="text-xs text-slate-500">+{stats?.newDocumentsThisWeek || 0} this week</p>
+                            </>
                         )}
-                        <p className="text-xs text-slate-500">+{stats?.newDocumentsThisWeek || 0} this week</p>
                     </CardContent>
                 </Card>
 
@@ -88,11 +103,16 @@ export default function DashboardPage() {
                     </CardHeader>
                     <CardContent>
                         {isLoading ? (
-                            <Skeleton className="h-8 w-20" />
+                            <div className="space-y-2">
+                                <Skeleton className="h-8 w-16" />
+                                <Skeleton className="h-3 w-32" />
+                            </div>
                         ) : (
-                            <div className="text-2xl font-bold">{stats?.aiDraftsCreated || 0}</div>
+                            <>
+                                <div className="text-2xl font-bold">{stats?.aiDraftsCreated || 0}</div>
+                                <p className="text-xs text-slate-500">+{stats?.newDraftsThisWeek || 0} this week</p>
+                            </>
                         )}
-                        <p className="text-xs text-slate-500">+{stats?.newDraftsThisWeek || 0} this week</p>
                     </CardContent>
                 </Card>
             </div>

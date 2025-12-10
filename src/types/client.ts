@@ -14,13 +14,13 @@ export interface IndividualClient {
     alternatePhone?: string
     dateOfBirth?: string
     gender?: 'male' | 'female' | 'other' | 'prefer-not-to-say'
-    ssn?: string // Last 4 digits only
+    pan?: string // PAN Number
 
     // Address
     streetAddress?: string
     city?: string
     state?: string
-    zipCode?: string
+    pincode?: string
     country?: string
 
     // Employment
@@ -49,8 +49,8 @@ export interface CompanyClient {
     // Company Information
     companyName: string
     dbaName?: string
-    companyType?: 'llc' | 'corporation' | 'partnership' | 'sole-proprietor' | 'other'
-    taxId?: string // EIN
+    companyType?: 'pvt-ltd' | 'public-ltd' | 'llp' | 'partnership' | 'sole-proprietor' | 'other'
+    taxId?: string // GSTIN
     industry?: string
     companySize?: 'small' | 'medium' | 'large'
     website?: string
@@ -66,7 +66,7 @@ export interface CompanyClient {
     streetAddress?: string
     city?: string
     state?: string
-    zipCode?: string
+    pincode?: string
     country?: string
 
     // Registered Agent

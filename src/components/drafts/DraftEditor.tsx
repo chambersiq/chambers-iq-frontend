@@ -10,24 +10,26 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export function DraftEditor() {
-    const [content, setContent] = useState(`IN THE SUPERIOR COURT OF THE STATE OF CALIFORNIA
-COUNTY OF LOS ANGELES
+    const [content, setContent] = useState(`IN THE COURT OF THE DISTRICT JUDGE AT [DISTRICT]
+CIVIL SUIT NO. _____ OF 2024
 
-JOHN SMITH,
-    Plaintiff,
-v.
-ACME CORP,
-    Defendant.
+IN THE MATTER OF:
 
-CASE NO. CV-2024-001
+[Petitioner Name]
+... Petitioner / Plaintiff
 
-DEFENDANT'S NOTICE OF MOTION AND MOTION TO DISMISS COMPLAINT; MEMORANDUM OF POINTS AND AUTHORITIES
+VERSUS
 
-TO ALL PARTIES AND THEIR ATTORNEYS OF RECORD:
+[Respondent Name]
+... Respondent / Defendant
 
-PLEASE TAKE NOTICE that on [Date], at [Time], or as soon thereafter as the matter may be heard, in Department [Dept] of the above-entitled court, Defendant Acme Corp will, and hereby does, move for an order dismissing the Complaint filed by Plaintiff John Smith.
+APPLICATION FOR [RELIEF SOUGHT]
 
-This motion is made on the grounds that the Complaint fails to state facts sufficient to constitute a cause of action against Defendant.`)
+MOST RESPECTFULLY SHOWETH:
+
+1. That the Petitioner is a law-abiding citizen residing at the address mentioned above.
+2. That the cause of action arose on [Date] when...
+`)
 
     return (
         <div className="h-[calc(100vh-4rem)] flex flex-col">
@@ -128,10 +130,10 @@ This motion is made on the grounds that the Complaint fails to state facts suffi
                                     </CardHeader>
                                     <CardContent className="text-sm text-slate-600 space-y-2">
                                         <div>
-                                            <span className="font-semibold">Plaintiff:</span> John Smith
+                                            <span className="font-semibold">Petitioner:</span> John Smith
                                         </div>
                                         <div>
-                                            <span className="font-semibold">Defendant:</span> Acme Corp
+                                            <span className="font-semibold">Respondent:</span> Acme Corp
                                         </div>
                                     </CardContent>
                                 </Card>

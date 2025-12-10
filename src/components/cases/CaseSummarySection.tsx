@@ -86,13 +86,15 @@ export function CaseSummarySection() {
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="desiredOutcome">Desired Outcome</Label>
-                        <Textarea
-                            id="desiredOutcome"
-                            placeholder="Goal: Obtain judgment for $500K..."
-                            className="min-h-[80px]"
-                            {...register('desiredOutcome')}
-                        />
+                        <div className="space-y-2">
+                            <Label htmlFor="prayer">Prayer / Relief Sought</Label>
+                            <Textarea
+                                id="prayer"
+                                placeholder="Goal: Decree of Divorce, Money Recovery of ₹5 Lakhs..."
+                                className="min-h-[80px]"
+                                {...register('prayer')}
+                            />
+                        </div>
                     </div>
                 </div>
 
@@ -100,7 +102,7 @@ export function CaseSummarySection() {
                     <Label htmlFor="strategyNotes">Case Strategy Notes (Internal)</Label>
                     <Textarea
                         id="strategyNotes"
-                        placeholder="Attorney's strategic thinking..."
+                        placeholder="Advocate's strategic thinking..."
                         className="min-h-[100px] bg-yellow-50/50"
                         {...register('caseStrategyNotes')}
                     />

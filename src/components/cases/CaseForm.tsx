@@ -138,7 +138,7 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
                             <Label htmlFor="caseName" className={errors.caseName ? "text-red-500" : ""}>Case Name *</Label>
                             <Input
                                 id="caseName"
-                                placeholder="e.g. Smith v. Jones"
+                                placeholder="e.g. Sharma vs State of Maharashtra"
                                 className={errors.caseName ? "border-red-500 focus-visible:ring-red-500" : ""}
                                 {...register('caseName', { required: "Case Name is required" })}
                             />

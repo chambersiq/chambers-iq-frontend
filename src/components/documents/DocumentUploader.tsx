@@ -139,7 +139,7 @@ export function DocumentUploader() {
                             <div className="grid gap-4">
                                 <div className="space-y-2">
                                     <Label>Document Title</Label>
-                                    <Input placeholder="e.g. Complaint" />
+                                    <Input placeholder="e.g. Plaint, Vakalatnama" />
                                 </div>
                                 <div className="grid gap-4 md:grid-cols-2">
                                     <div className="space-y-2">
@@ -149,10 +149,10 @@ export function DocumentUploader() {
                                                 <SelectValue placeholder="Select type" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="pleading">Pleading</SelectItem>
-                                                <SelectItem value="motion">Motion</SelectItem>
+                                                <SelectItem value="pleading">Pleading / Plaint</SelectItem>
+                                                <SelectItem value="motion">Application</SelectItem>
                                                 <SelectItem value="evidence">Evidence</SelectItem>
-                                                <SelectItem value="contract">Contract</SelectItem>
+                                                <SelectItem value="contract">Vakalatnama</SelectItem>
                                                 <SelectItem value="other">Other</SelectItem>
                                             </SelectContent>
                                         </Select>

@@ -38,11 +38,11 @@ export function FinancialSection() {
 
                     {feeArrangement === 'hourly' && (
                         <div className="space-y-2">
-                            <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
+                            <Label htmlFor="hourlyRate">Hourly Rate (₹)</Label>
                             <Input
                                 id="hourlyRate"
                                 type="number"
-                                placeholder="400"
+                                placeholder="5000"
                                 {...register('hourlyBillingRate', { valueAsNumber: true })}
                             />
                         </div>
@@ -50,11 +50,11 @@ export function FinancialSection() {
 
                     {feeArrangement === 'contingency' && (
                         <div className="space-y-2">
-                            <Label htmlFor="contingency">Contingency Percentage (%)</Label>
+                            <Label htmlFor="contingency">Success Fee / Contingency (%)</Label>
                             <Input
                                 id="contingency"
                                 type="number"
-                                placeholder="33.33"
+                                placeholder="10"
                                 {...register('contingencyFeePercent', { valueAsNumber: true })}
                             />
                         </div>
@@ -62,11 +62,11 @@ export function FinancialSection() {
 
                     {feeArrangement === 'flat-fee' && (
                         <div className="space-y-2">
-                            <Label htmlFor="flatFee">Flat Fee Amount ($)</Label>
+                            <Label htmlFor="flatFee">Flat Fee Amount (₹)</Label>
                             <Input
                                 id="flatFee"
                                 type="number"
-                                placeholder="5000"
+                                placeholder="50000"
                                 {...register('flatFeeAmount', { valueAsNumber: true })}
                             />
                         </div>
@@ -75,29 +75,29 @@ export function FinancialSection() {
 
                 <div className="grid gap-6 md:grid-cols-3">
                     <div className="space-y-2">
-                        <Label htmlFor="retainer">Retainer Amount ($)</Label>
+                        <Label htmlFor="retainer">Advance / Retainer (₹)</Label>
                         <Input
                             id="retainer"
                             type="number"
-                            placeholder="5000"
+                            placeholder="25000"
                             {...register('retainerAmount', { valueAsNumber: true })}
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="estimatedValue">Est. Case Value ($)</Label>
+                        <Label htmlFor="estimatedValue">Est. Case Value (₹)</Label>
                         <Input
                             id="estimatedValue"
                             type="number"
-                            placeholder="100000"
+                            placeholder="500000"
                             {...register('estimatedCaseValue', { valueAsNumber: true })}
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="damages">Damages Claimed ($)</Label>
+                        <Label htmlFor="damages">Damages Claimed (₹)</Label>
                         <Input
                             id="damages"
                             type="number"
-                            placeholder="75000"
+                            placeholder="200000"
                             {...register('clientDamagesClaimed', { valueAsNumber: true })}
                         />
                     </div>

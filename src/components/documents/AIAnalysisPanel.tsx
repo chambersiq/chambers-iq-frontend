@@ -37,11 +37,11 @@ export function AIAnalysisPanel() {
                         </h4>
                         <div className="space-y-2">
                             <div className="bg-white p-3 rounded-md border shadow-sm text-sm">
-                                <span className="font-semibold block">Plaintiff</span>
+                                <span className="font-semibold block">Petitioner / Plaintiff</span>
                                 John Smith
                             </div>
                             <div className="bg-white p-3 rounded-md border shadow-sm text-sm">
-                                <span className="font-semibold block">Defendant</span>
+                                <span className="font-semibold block">Respondent / Defendant</span>
                                 Acme Corp
                             </div>
                         </div>
