@@ -52,7 +52,7 @@ export interface Case {
     caseSummary: string // Minimum 100 chars
     clientPosition?: string
     opposingPartyPosition?: string
-    keyFacts?: string[]
+
     keyFacts?: string[]
     legalIssues?: string
     prayer?: string
