@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, Suspense } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { TemplateEditor } from '@/components/templates/TemplateEditor'
-import { ArrowLeft, Save, Sparkles, Send, RefreshCw, MessageSquare } from 'lucide-react'
+import { ArrowLeft, Save, Sparkles, Send, RefreshCw, MessageSquare, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useCreateTemplate } from '@/hooks/api/useTemplates'
@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select"
 
 
-export default function NewTemplatePage() {
+function NewTemplateContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const { user } = useAuth()
@@ -232,5 +232,17 @@ export default function NewTemplatePage() {
                 )}
             </div>
         </div>
+    )
+}
+
+export default function NewTemplatePage() {
+    return (
+        <Suspense fallback={
+            <div className="flex h-full w-full items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+            </div>
+        }>
+            <NewTemplateContent />
+        </Suspense>
     )
 }

@@ -1,7 +1,8 @@
 import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
+import { Plus, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { CaseList } from '@/components/cases/CaseList'
+import { Suspense } from 'react'
 
 export default function CasesPage() {
     return (
@@ -19,7 +20,13 @@ export default function CasesPage() {
                 </Link>
             </div>
 
-            <CaseList />
+            <Suspense fallback={
+                <div className="flex w-full items-center justify-center py-10">
+                    <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+                </div>
+            }>
+                <CaseList />
+            </Suspense>
         </div>
     )
 }
