@@ -12,10 +12,44 @@ import { useDocuments, useDeleteDocument } from '@/hooks/api/useDocuments'
 import { useAuth } from '@/hooks/api/useCompany'
 
 // --- Helper Component for Inline Expandable Text ---
+// --- Helper Component for Inline Expandable Text ---
 function InlineExpandableText({ text, label, icon: Icon, className }: { text: string, label: string, icon?: any, className?: string }) {
     const [expanded, setExpanded] = useState(false)
-    const limit = 50 // Character limit for inline truncation
+    const limit = 100
     const shouldTruncate = text.length > limit
+
+    let displayContent = expanded ? text : (shouldTruncate ? text.slice(0, limit) : text);
+
+    // Fix broken markdown in truncated text
+    if (!expanded && shouldTruncate) {
+        if (text.startsWith('**') && !displayContent.endsWith('**')) {
+            displayContent += '...**';
+        } else if (text.startsWith('*') && !text.startsWith('**') && !displayContent.endsWith('*')) {
+            displayContent += '...*';
+        } else {
+            displayContent += '...';
+        }
+    }
+
+    // Simple Bold & Italic Formatter
+    const formatText = (content: string) => {
+        // Splitting by bold first (**...**)
+        const parts = content.split(/(\*\*.*?\*\*)/g);
+        return parts.map((part, i) => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+                return <strong key={i} className="font-semibold text-slate-900">{part.slice(2, -2)}</strong>;
+            }
+
+            // Then split by italic (*...*) within non-bold parts
+            const subParts = part.split(/(\*.*?\*)/g);
+            return subParts.map((subPart, j) => {
+                if (subPart.startsWith('*') && subPart.endsWith('*') && subPart.length > 2) {
+                    return <em key={`${i}-${j}`} className="italic text-slate-800">{subPart.slice(1, -1)}</em>;
+                }
+                return subPart;
+            });
+        });
+    };
 
     return (
         <div className={cn("text-sm flex items-start gap-2", className)}>
@@ -23,30 +57,26 @@ function InlineExpandableText({ text, label, icon: Icon, className }: { text: st
                 {Icon && <Icon className="h-3 w-3 inline mr-1 -mt-0.5" />}
                 {label}:
             </span>
-            <div className="flex-1 min-w-0 text-sm text-slate-700 leading-relaxed">
-                {expanded ? (
-                    <span>
-                        {text}
+            <div className="flex-1 min-w-0 text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                <span>
+                    {formatText(displayContent)}
+                    {shouldTruncate && !expanded && (
+                        <button
+                            onClick={() => setExpanded(true)}
+                            className="text-[10px] font-medium text-blue-600 hover:text-blue-800 ml-1.5 inline-flex items-center gap-0.5 align-baseline"
+                        >
+                            Show More <ChevronDown className="h-3 w-3" />
+                        </button>
+                    )}
+                    {expanded && (
                         <button
                             onClick={() => setExpanded(false)}
                             className="text-[10px] font-medium text-blue-600 hover:text-blue-800 ml-1.5 inline-flex items-center gap-0.5 align-baseline"
                         >
                             Show Less <ChevronUp className="h-3 w-3" />
                         </button>
-                    </span>
-                ) : (
-                    <span>
-                        {shouldTruncate ? `${text.slice(0, limit)}...` : text}
-                        {shouldTruncate && (
-                            <button
-                                onClick={() => setExpanded(true)}
-                                className="text-[10px] font-medium text-blue-600 hover:text-blue-800 ml-1.5 inline-flex items-center gap-0.5 align-baseline"
-                            >
-                                Show More <ChevronDown className="h-3 w-3" />
-                            </button>
-                        )}
-                    </span>
-                )}
+                    )}
+                </span>
             </div>
         </div>
     )
@@ -158,33 +188,18 @@ export function CaseDocumentView({ caseId, caseName, readOnly = false, hideHeade
                                                 </div>
                                             </div>
 
-                                            {/* Section 2: Summaries (Flex Fill - Side by Side) */}
-                                            <div className="flex-1 min-w-0 flex items-center gap-4 border-l pl-4 border-slate-200 h-full">
-                                                {/* User Summary */}
-                                                <div className="flex-1 min-w-0">
-                                                    {doc.description ? (
-                                                        <InlineExpandableText
-                                                            label="Summary"
-                                                            text={doc.description}
-                                                        />
-                                                    ) : (
-                                                        <span className="text-[11px] text-slate-300 italic">No summary</span>
-                                                    )}
-                                                </div>
-
-                                                {/* AI Summary */}
-                                                <div className="flex-1 min-w-0 border-l pl-4 border-slate-200">
-                                                    {doc.aiSummary ? (
-                                                        <InlineExpandableText
-                                                            label="AI Analysis"
-                                                            text={doc.aiSummary}
-                                                            icon={Sparkles}
-                                                            className="text-purple-900"
-                                                        />
-                                                    ) : (
-                                                        <span className="text-[11px] text-slate-300 italic">No AI analysis</span>
-                                                    )}
-                                                </div>
+                                            {/* Section 2: Unified Summary */}
+                                            <div className="flex-1 min-w-0 border-l pl-4 border-slate-200 h-full">
+                                                {doc.description ? (
+                                                    <InlineExpandableText
+                                                        label={doc.aiStatus === 'completed' ? "AI Summary" : "Summary"}
+                                                        text={doc.description}
+                                                        icon={doc.aiStatus === 'completed' ? Sparkles : undefined}
+                                                        className={doc.aiStatus === 'completed' ? "text-purple-900" : ""}
+                                                    />
+                                                ) : (
+                                                    <span className="text-[11px] text-slate-300 italic">No summary</span>
+                                                )}
                                             </div>
 
                                             {/* Section 3: Actions (Fixed) */}

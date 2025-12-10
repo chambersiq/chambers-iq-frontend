@@ -46,4 +46,5 @@ export interface DocumentCreate {
     fileSize: number
     mimeType: string
     description?: string
+    generateSummary?: boolean
 }

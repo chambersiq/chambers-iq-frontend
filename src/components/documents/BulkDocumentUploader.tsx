@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import api from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -43,7 +44,7 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
     const [title, setTitle] = useState('')
     const [type, setType] = useState<DocumentType>('motion')
     const [summary, setSummary] = useState('')
-    const [aiGenerate, setAiGenerate] = useState(true)
+    const [aiGenerate, setAiGenerate] = useState(false)
     const [selectedFiles, setSelectedFiles] = useState<File[]>([])
     const [dragActive, setDragActive] = useState(false)
     const inputRef = useRef<HTMLInputElement>(null)
@@ -103,7 +104,7 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
         setTitle('')
         setSummary('')
         setSelectedFiles([])
-        setAiGenerate(true)
+        setAiGenerate(false)
         if (inputRef.current) inputRef.current.value = ''
     }
 
@@ -122,13 +123,14 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
         for (const item of queue) {
             try {
                 // 1. Get Presigned URL
-                const { uploadUrl } = await createDocumentUrl.mutateAsync({
+                const { document, uploadUrl } = await createDocumentUrl.mutateAsync({
                     caseId: caseId || '', // Handle undefined caseId if needed
                     name: item.file.name,
                     type: item.type,
                     fileSize: item.file.size,
                     mimeType: item.file.type,
-                    description: item.summary
+                    description: item.summary,
+                    generateSummary: item.aiGenerate
                 })
 
                 // 2. Upload to S3
@@ -139,6 +141,9 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
                         'Content-Type': item.file.type
                     }
                 })
+
+                // 3. Confirm Upload & Trigger AI (if enabled)
+                await api.post(`/documents/${document.documentId}/uploaded`)
 
                 // 3. Update Progress to 100%
                 setQueue(prev => prev.map(q => q.id === item.id ? { ...q, progress: 100 } : q))
@@ -205,15 +210,31 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
                                 </p>
                             </div>
 
-                            <div className="space-y-2">
-                                <Label>Summary (Optional)</Label>
-                                <Textarea
-                                    placeholder="Brief description..."
-                                    className="h-20 resize-none"
-                                    value={summary}
-                                    onChange={(e) => setSummary(e.target.value)}
+
+                            {/* 3. AI Toggle (Moved Up) */}
+                            <div className="flex items-center space-x-2 bg-purple-50 p-3 rounded-md border border-purple-100">
+                                <Checkbox
+                                    id="ai-gen"
+                                    checked={aiGenerate}
+                                    onCheckedChange={(c) => setAiGenerate(c as boolean)}
                                 />
+                                <Label htmlFor="ai-gen" className="font-medium flex items-center gap-2 cursor-pointer text-purple-900 text-sm">
+                                    <Sparkles className="h-3 w-3 text-purple-600" />
+                                    Auto-generate Summary
+                                </Label>
                             </div>
+
+                            {!aiGenerate && (
+                                <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                                    <Label>Summary (Optional)</Label>
+                                    <Textarea
+                                        placeholder="Brief description..."
+                                        className="h-20 resize-none"
+                                        value={summary}
+                                        onChange={(e) => setSummary(e.target.value)}
+                                    />
+                                </div>
+                            )}
                         </div>
 
                         {/* 2. File Dropzone */}
@@ -272,18 +293,6 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
                             )}
                         </div>
 
-                        {/* 3. AI Toggle */}
-                        <div className="flex items-center space-x-2 bg-purple-50 p-3 rounded-md border border-purple-100">
-                            <Checkbox
-                                id="ai-gen"
-                                checked={aiGenerate}
-                                onCheckedChange={(c) => setAiGenerate(c as boolean)}
-                            />
-                            <Label htmlFor="ai-gen" className="font-medium flex items-center gap-2 cursor-pointer text-purple-900 text-sm">
-                                <Sparkles className="h-3 w-3 text-purple-600" />
-                                Auto-generate Summary
-                            </Label>
-                        </div>
 
                         <Button
                             className="w-full"
