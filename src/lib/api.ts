@@ -7,12 +7,21 @@ const api = axios.create({
     },
 });
 
-// Add interceptors for auth token (if needed later)
-api.interceptors.request.use((config) => {
-    // const token = localStorage.getItem('token');
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
+// Add interceptors for auth token and context
+import { getSession } from "next-auth/react";
+
+api.interceptors.request.use(async (config) => {
+    // We use getSession because it works client-side and retrieves the session
+    const session = await getSession();
+
+    if (session?.user) {
+        if ((session.user as any).companyId) {
+            config.headers['X-Company-Id'] = (session.user as any).companyId;
+        }
+        if (session.user.email) {
+            config.headers['X-User-Email'] = session.user.email;
+        }
+    }
     return config;
 });
 
