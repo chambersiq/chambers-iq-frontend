@@ -41,7 +41,7 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
 
     // Form State
     const [title, setTitle] = useState('')
-    const [type, setType] = useState<DocumentType>('other')
+    const [type, setType] = useState<DocumentType>('motion')
     const [summary, setSummary] = useState('')
     const [aiGenerate, setAiGenerate] = useState(true)
     const [selectedFiles, setSelectedFiles] = useState<File[]>([])

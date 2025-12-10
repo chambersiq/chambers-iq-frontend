@@ -44,7 +44,11 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
             feeArrangement: initialData?.feeArrangement || 'hourly',
             caseSummary: initialData?.caseSummary || '',
             // Initialize other fields as needed, or let them be undefined
-            ...initialData
+            ...initialData,
+            // Override keyFacts in spread to ensure it's the string version
+            keyFacts: Array.isArray(initialData?.keyFacts)
+                ? initialData.keyFacts.join('\n')
+                : (initialData?.keyFacts || ''),
         } as any // Cast to any to avoid strict type checking on partial initialData
     })
 
@@ -52,16 +56,42 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
 
     const onSubmit = (data: CaseFormData) => {
         console.log("Submitting form data:", data)
+        // DEBUG: Check for duplication
+        if (data.clientPosition && data.clientPosition === data.opposingPartyPosition) {
+            console.warn("WARNING: Client Position and Opposing Party Position are identical:", data.clientPosition)
+        }
         if (!companyId) {
             toast.error("Company ID is missing")
             return
+        }
+
+        // Sanitize data globally
+        const { clientId, caseNumber, ...rest } = data
+        const payload = {
+            ...rest,
+            // Only include caseNumber if it's not empty
+            ...(caseNumber ? { caseNumber } : {}),
+            // Ensure arrays are initialized
+            customDeadlines: data.customDeadlines || [],
+            additionalParties: data.additionalParties || [],
+            // Transform keyFacts from string to array if it's a string (from Textarea)
+            keyFacts: typeof data.keyFacts === 'string'
+                ? (data.keyFacts as string).split('\n').filter((line: string) => line.trim() !== '')
+                : data.keyFacts || [],
+            // Ensure numeric fields are numbers or undefined (not NaN)
+            hourlyBillingRate: data.hourlyBillingRate || undefined,
+            contingencyFeePercent: data.contingencyFeePercent || undefined,
+            flatFeeAmount: data.flatFeeAmount || undefined,
+            retainerAmount: data.retainerAmount || undefined,
+            estimatedCaseValue: data.estimatedCaseValue || undefined,
+            clientDamagesClaimed: data.clientDamagesClaimed || undefined,
         }
 
         if (isEditing && initialData?.caseId && initialData?.clientId) {
             updateCase.mutate({
                 clientId: initialData.clientId,
                 caseId: initialData.caseId,
-                data
+                data: payload as any
             }, {
                 onSuccess: () => {
                     toast.success("Case updated successfully")
@@ -77,28 +107,6 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
             if (!data.clientId) {
                 toast.error("Client is required")
                 return
-            }
-
-            // Sanitize data
-            const { clientId, caseNumber, ...rest } = data
-            const payload = {
-                ...rest,
-                // Only include caseNumber if it's not empty
-                ...(caseNumber ? { caseNumber } : {}),
-                // Ensure arrays are initialized
-                customDeadlines: data.customDeadlines || [],
-                additionalParties: data.additionalParties || [],
-                // Transform keyFacts from string to array if it's a string (from Textarea)
-                keyFacts: typeof data.keyFacts === 'string'
-                    ? (data.keyFacts as string).split('\n').filter((line: string) => line.trim() !== '')
-                    : data.keyFacts || [],
-                // Ensure numeric fields are numbers or undefined (not NaN)
-                hourlyBillingRate: data.hourlyBillingRate || undefined,
-                contingencyFeePercent: data.contingencyFeePercent || undefined,
-                flatFeeAmount: data.flatFeeAmount || undefined,
-                retainerAmount: data.retainerAmount || undefined,
-                estimatedCaseValue: data.estimatedCaseValue || undefined,
-                clientDamagesClaimed: data.clientDamagesClaimed || undefined,
             }
 
             createCase.mutate({ clientId: data.clientId, data: payload as any }, {

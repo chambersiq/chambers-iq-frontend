@@ -8,6 +8,7 @@ export interface Company {
     phone?: string;
     address?: string;
     status: string;
+    createdAt?: string;
 }
 
 export interface User {

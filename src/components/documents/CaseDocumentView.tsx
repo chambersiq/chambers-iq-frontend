@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { FileText, Plus, Trash2, Download, Eye, Sparkles, ChevronDown, ChevronUp } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import { useDocuments } from '@/hooks/api/useDocuments'
+import { useDocuments, useDeleteDocument } from '@/hooks/api/useDocuments'
 import { useAuth } from '@/hooks/api/useCompany'
 
 // --- Helper Component for Inline Expandable Text ---
@@ -59,9 +59,10 @@ interface CaseDocumentViewProps {
     caseId: string
     caseName: string
     readOnly?: boolean
+    hideHeader?: boolean
 }
 
-export function CaseDocumentView({ caseId, caseName, readOnly = false }: CaseDocumentViewProps) {
+export function CaseDocumentView({ caseId, caseName, readOnly = false, hideHeader = false }: CaseDocumentViewProps) {
     const { user } = useAuth()
     const companyId = user?.companyId || ''
     const { data: documents = [], isLoading } = useDocuments(companyId, caseId)
@@ -73,9 +74,12 @@ export function CaseDocumentView({ caseId, caseName, readOnly = false }: CaseDoc
         return acc
     }, {} as Record<DocumentType, Document[]>)
 
-    const handleDelete = (id: string) => {
-        // TODO: Implement delete when backend endpoint is ready
-        console.log("Delete document", id)
+    const deleteDocument = useDeleteDocument(companyId)
+
+    const handleDelete = (documentId: string) => {
+        if (confirm("Are you sure you want to delete this document?")) {
+            deleteDocument.mutate({ caseId, documentId })
+        }
     }
 
     if (isLoading) {
@@ -102,7 +106,7 @@ export function CaseDocumentView({ caseId, caseName, readOnly = false }: CaseDoc
 
     return (
         <div className="space-y-6">
-            {!readOnly && (
+            {!readOnly && !hideHeader && (
                 <div className="flex items-center justify-between">
                     <h2 className="text-2xl font-bold text-slate-800">{caseName}</h2>
                     <Link href={`/cases/${caseId}/documents/new`}>
@@ -129,7 +133,7 @@ export function CaseDocumentView({ caseId, caseName, readOnly = false }: CaseDoc
                             <div className="space-y-3">
                                 {docs.map(doc => (
                                     <div
-                                        key={doc.id}
+                                        key={doc.documentId}
                                         className="px-3 py-2 rounded-lg border bg-slate-50/50 hover:bg-slate-50 transition-colors group"
                                     >
                                         <div className="flex items-center gap-4">
@@ -184,20 +188,23 @@ export function CaseDocumentView({ caseId, caseName, readOnly = false }: CaseDoc
                                             </div>
 
                                             {/* Section 3: Actions (Fixed) */}
-                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 pl-2">
-                                                <Button variant="ghost" size="icon" className="h-7 w-7">
-                                                    <Eye className="h-3 w-3 text-slate-500" />
+                                            <div className="flex items-center gap-1 shrink-0 pl-2">
+                                                <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => window.open(doc.url, '_blank')}>
+                                                    <Eye className="h-5 w-5 text-slate-500" />
                                                 </Button>
-                                                <Button variant="ghost" size="icon" className="h-7 w-7">
-                                                    <Download className="h-3 w-3 text-slate-500" />
-                                                </Button>
+                                                <a href={doc.url} download target="_blank" rel="noopener noreferrer">
+                                                    <Button variant="ghost" size="icon" className="h-9 w-9">
+                                                        <Download className="h-5 w-5 text-slate-500" />
+                                                    </Button>
+                                                </a>
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-7 w-7 hover:text-red-600"
-                                                    onClick={() => handleDelete(doc.id)}
+                                                    className="h-9 w-9 hover:text-red-600"
+                                                    onClick={() => handleDelete(doc.documentId)}
+                                                    disabled={deleteDocument.isPending}
                                                 >
-                                                    <Trash2 className="h-3 w-3" />
+                                                    <Trash2 className="h-5 w-5" />
                                                 </Button>
                                             </div>
 

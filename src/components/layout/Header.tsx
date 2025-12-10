@@ -1,6 +1,6 @@
 'use client'
 
-import { Bell, Search, LogOut } from 'lucide-react'
+import { Bell, Search, LogOut, Shield, ShieldAlert, Crown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { signOut } from 'next-auth/react'
 
@@ -36,7 +36,33 @@ export function Header() {
                 <div className="flex items-center gap-3 border-r border-slate-200 pr-4 mr-1">
                     <div className="text-right">
                         <p className="text-sm font-medium">{user.fullName || 'User'}</p>
-                        <p className="text-xs text-slate-500 capitalize">{user.role || 'User'}</p>
+                        <div className="flex items-center justify-end gap-1.5 mt-0.5">
+                            {(() => {
+                                switch (user.role) {
+                                    case 'super_admin':
+                                        return (
+                                            <>
+                                                <span className="text-[10px] font-medium text-purple-600 uppercase tracking-wider">Super Admin</span>
+                                                <Crown className="h-3 w-3 text-purple-600" />
+                                            </>
+                                        )
+                                    case 'admin':
+                                        return (
+                                            <>
+                                                <span className="text-[10px] font-medium text-blue-600 uppercase tracking-wider">Admin</span>
+                                                <ShieldAlert className="h-3 w-3 text-blue-600" />
+                                            </>
+                                        )
+                                    default:
+                                        return (
+                                            <>
+                                                <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Advocate</span>
+                                                <Shield className="h-3 w-3 text-slate-500" />
+                                            </>
+                                        )
+                                }
+                            })()}
+                        </div>
                     </div>
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-white font-semibold">
                         {user.fullName ? getInitials(user.fullName) : 'U'}

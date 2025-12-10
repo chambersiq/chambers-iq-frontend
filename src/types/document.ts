@@ -12,7 +12,7 @@ export type DocumentType =
 export type AIProcessingStatus = 'pending' | 'processing' | 'completed' | 'failed'
 
 export interface Document {
-    id: string
+    documentId: string
     caseId: string
     name: string
     type: DocumentType

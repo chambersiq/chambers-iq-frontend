@@ -12,6 +12,9 @@ import {
     Home,
     Settings,
     HelpCircle,
+    Shield,
+    ShieldAlert,
+    Crown,
 } from 'lucide-react'
 
 const navigation = [
@@ -145,7 +148,33 @@ export function Sidebar() {
                     </div>
                     <div className="ml-3 overflow-hidden">
                         <p className="text-sm font-medium truncate">{user.fullName || 'User'}</p>
-                        <p className="text-xs text-slate-400 truncate capitalize">{user.role || 'User'}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                            {(() => {
+                                switch (user.role) {
+                                    case 'super_admin':
+                                        return (
+                                            <>
+                                                <Crown className="h-3 w-3 text-purple-400" />
+                                                <span className="text-[10px] font-medium text-purple-400 uppercase tracking-wider">Super Admin</span>
+                                            </>
+                                        )
+                                    case 'admin':
+                                        return (
+                                            <>
+                                                <ShieldAlert className="h-3 w-3 text-blue-400" />
+                                                <span className="text-[10px] font-medium text-blue-400 uppercase tracking-wider">Admin</span>
+                                            </>
+                                        )
+                                    default:
+                                        return (
+                                            <>
+                                                <Shield className="h-3 w-3 text-slate-400" />
+                                                <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Advocate</span>
+                                            </>
+                                        )
+                                }
+                            })()}
+                        </div>
                     </div>
                 </div>
             </div>

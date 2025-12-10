@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Plus, Trash2 } from 'lucide-react'
-import { useFormContext, useFieldArray } from 'react-hook-form'
+import { useFormContext, useFieldArray, Controller } from 'react-hook-form'
 
 export function PartiesSection() {
     const { register, control, setValue } = useFormContext()
@@ -33,15 +33,21 @@ export function PartiesSection() {
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="opposingType">Type</Label>
-                            <Select onValueChange={(val) => setValue('opposingPartyType', val)}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="individual">Individual</SelectItem>
-                                    <SelectItem value="company">Company</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <Controller
+                                control={control}
+                                name="opposingPartyType"
+                                render={({ field }) => (
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select type" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="individual">Individual</SelectItem>
+                                            <SelectItem value="company">Company</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
                         </div>
                     </div>
                 </div>
@@ -105,15 +111,21 @@ export function PartiesSection() {
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Type</Label>
-                                    <Select onValueChange={(val) => setValue(`additionalParties.${index}.type`, val)}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select type" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="individual">Individual</SelectItem>
-                                            <SelectItem value="company">Company</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <Controller
+                                        control={control}
+                                        name={`additionalParties.${index}.type`}
+                                        render={({ field }) => (
+                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select type" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="individual">Individual</SelectItem>
+                                                    <SelectItem value="company">Company</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        )}
+                                    />
                                 </div>
                             </div>
                         </div>

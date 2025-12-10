@@ -1,3 +1,5 @@
+"use client"
+
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -11,9 +13,17 @@ import {
     Calendar,
     AlertCircle,
     CheckCircle2,
+    Trash2,
 } from 'lucide-react'
 
+import { useAuth } from '@/hooks/api/useCompany'
+import { useDashboardStats } from '@/hooks/api/useDashboard'
+import { Skeleton } from '@/components/ui/skeleton'
+
 export default function DashboardPage() {
+    const { user } = useAuth()
+    const { data: stats, isLoading } = useDashboardStats(user?.companyId || '')
+
     return (
         <div className="space-y-8">
             {/* Page Header */}
@@ -32,8 +42,12 @@ export default function DashboardPage() {
                         <Users className="h-4 w-4 text-slate-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">127</div>
-                        <p className="text-xs text-slate-500">+12% from last month</p>
+                        {isLoading ? (
+                            <Skeleton className="h-8 w-20" />
+                        ) : (
+                            <div className="text-2xl font-bold">{stats?.activeClients || 0}</div>
+                        )}
+                        <p className="text-xs text-slate-500">+{stats?.newClientsThisMonth || 0} from last month</p>
                     </CardContent>
                 </Card>
 
@@ -43,8 +57,12 @@ export default function DashboardPage() {
                         <Briefcase className="h-4 w-4 text-slate-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">43</div>
-                        <p className="text-xs text-slate-500">+3 new this week</p>
+                        {isLoading ? (
+                            <Skeleton className="h-8 w-20" />
+                        ) : (
+                            <div className="text-2xl font-bold">{stats?.activeCases || 0}</div>
+                        )}
+                        <p className="text-xs text-slate-500">+{stats?.newCasesThisWeek || 0} new this week</p>
                     </CardContent>
                 </Card>
 
@@ -54,8 +72,12 @@ export default function DashboardPage() {
                         <FileText className="h-4 w-4 text-slate-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">1,247</div>
-                        <p className="text-xs text-slate-500">+89 this week</p>
+                        {isLoading ? (
+                            <Skeleton className="h-8 w-20" />
+                        ) : (
+                            <div className="text-2xl font-bold">{stats?.documentsProcessed || 0}</div>
+                        )}
+                        <p className="text-xs text-slate-500">+{stats?.newDocumentsThisWeek || 0} this week</p>
                     </CardContent>
                 </Card>
 
@@ -65,8 +87,12 @@ export default function DashboardPage() {
                         <Edit3 className="h-4 w-4 text-slate-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">34</div>
-                        <p className="text-xs text-slate-500">+15 this week</p>
+                        {isLoading ? (
+                            <Skeleton className="h-8 w-20" />
+                        ) : (
+                            <div className="text-2xl font-bold">{stats?.aiDraftsCreated || 0}</div>
+                        )}
+                        <p className="text-xs text-slate-500">+{stats?.newDraftsThisWeek || 0} this week</p>
                     </CardContent>
                 </Card>
             </div>
@@ -152,32 +178,42 @@ export default function DashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-3">
-                                <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
-                                <div className="flex-1">
-                                    <div className="font-semibold text-sm">Statute of Limitations - Smith v. Jones</div>
-                                    <div className="text-xs text-red-700">Due in 5 days • Jan 15, 2025</div>
+                            {isLoading ? (
+                                <div className="space-y-2">
+                                    <Skeleton className="h-10 w-full" />
+                                    <Skeleton className="h-10 w-full" />
+                                    <Skeleton className="h-10 w-full" />
                                 </div>
-                            </div>
+                            ) : stats?.upcomingDeadlines && stats.upcomingDeadlines.length > 0 ? (
+                                stats.upcomingDeadlines.map((deadline) => {
+                                    const deadlineDate = new Date(deadline.date);
+                                    const isOverdue = deadlineDate < new Date();
+                                    const dayDiff = Math.ceil((deadlineDate.getTime() - new Date().getTime()) / (1000 * 3600 * 24));
 
-                            <div className="flex items-start gap-3 rounded-lg border border-orange-200 bg-orange-50 p-3">
-                                <AlertCircle className="h-5 w-5 text-orange-600 mt-0.5" />
-                                <div className="flex-1">
-                                    <div className="font-semibold text-sm">Discovery Cutoff - Johnson Case</div>
-                                    <div className="text-xs text-orange-700">Due in 12 days • Jan 22, 2025</div>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start gap-3 rounded-lg border border-slate-200 p-3">
-                                <Calendar className="h-5 w-5 text-slate-600 mt-0.5" />
-                                <div className="flex-1">
-                                    <div className="font-semibold text-sm">Trial Date - Williams Matter</div>
-                                    <div className="text-xs text-slate-600">Feb 10, 2025</div>
-                                </div>
-                            </div>
+                                    return (
+                                        <div key={deadline.id} className={`flex items-start gap-3 rounded-lg border p-3 ${isOverdue ? 'border-red-200 bg-red-50' : 'border-slate-200'
+                                            }`}>
+                                            <AlertCircle className={`h-5 w-5 mt-0.5 ${isOverdue || deadline.type === 'statute' ? 'text-red-600' :
+                                                deadline.type === 'discovery' ? 'text-orange-600' :
+                                                    'text-blue-600'
+                                                }`} />
+                                            <div className="flex-1">
+                                                <div className="font-semibold text-sm">{deadline.title}</div>
+                                                <div className={`text-xs ${isOverdue ? 'text-red-700' : 'text-slate-600'}`}>
+                                                    {isOverdue
+                                                        ? `Overdue by ${Math.abs(dayDiff)} days`
+                                                        : `Due in ${dayDiff} days`} • {new Date(deadline.date).toLocaleDateString()}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )
+                                })
+                            ) : (
+                                <p className="text-sm text-slate-500">No upcoming deadlines.</p>
+                            )}
                         </div>
-                        <Button variant="link" className="mt-4 w-full">
-                            View All Deadlines →
+                        <Button variant="link" className="mt-4 w-full" asChild>
+                            <Link href="/cases">View All Deadlines →</Link>
                         </Button>
                     </CardContent>
                 </Card>
@@ -192,45 +228,38 @@ export default function DashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            <div className="flex items-start gap-3">
-                                <div className="rounded-full bg-blue-100 p-2">
-                                    <FileText className="h-4 w-4 text-blue-600" />
+                            {isLoading ? (
+                                <div className="space-y-2">
+                                    <Skeleton className="h-10 w-full" />
+                                    <Skeleton className="h-10 w-full" />
+                                    <Skeleton className="h-10 w-full" />
                                 </div>
-                                <div className="flex-1">
-                                    <div className="text-sm font-semibold">Document Analyzed</div>
-                                    <div className="text-xs text-slate-500">Contract_Agreement.pdf • 2 hours ago</div>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start gap-3">
-                                <div className="rounded-full bg-green-100 p-2">
-                                    <Edit3 className="h-4 w-4 text-green-600" />
-                                </div>
-                                <div className="flex-1">
-                                    <div className="text-sm font-semibold">Draft Created</div>
-                                    <div className="text-xs text-slate-500">Motion to Dismiss • 4 hours ago</div>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start gap-3">
-                                <div className="rounded-full bg-purple-100 p-2">
-                                    <Briefcase className="h-4 w-4 text-purple-600" />
-                                </div>
-                                <div className="flex-1">
-                                    <div className="text-sm font-semibold">Case Updated</div>
-                                    <div className="text-xs text-slate-500">Anderson v. Tech Corp • Yesterday</div>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start gap-3">
-                                <div className="rounded-full bg-orange-100 p-2">
-                                    <Users className="h-4 w-4 text-orange-600" />
-                                </div>
-                                <div className="flex-1">
-                                    <div className="text-sm font-semibold">New Client Added</div>
-                                    <div className="text-xs text-slate-500">Acme Corporation • 2 days ago</div>
-                                </div>
-                            </div>
+                            ) : stats?.recentActivity && stats.recentActivity.length > 0 ? (
+                                stats.recentActivity.slice(0, 5).map((activity) => (
+                                    <div key={activity.id} className="flex items-start gap-3">
+                                        <div className={`rounded-full p-2 ${activity.title.includes('Deleted') ? 'bg-red-100' :
+                                            activity.type === 'client' ? 'bg-orange-100' :
+                                                activity.type === 'case' ? 'bg-purple-100' :
+                                                    activity.type === 'draft' ? 'bg-green-100' :
+                                                        'bg-blue-100'
+                                            }`}>
+                                            {activity.title.includes('Deleted') ? <Trash2 className="h-4 w-4 text-red-600" /> :
+                                                activity.type === 'client' ? <Users className="h-4 w-4 text-orange-600" /> :
+                                                    activity.type === 'case' ? <Briefcase className="h-4 w-4 text-purple-600" /> :
+                                                        activity.type === 'draft' ? <Edit3 className="h-4 w-4 text-green-600" /> :
+                                                            <FileText className="h-4 w-4 text-blue-600" />}
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="text-sm font-semibold">{activity.title}</div>
+                                            <div className="text-xs text-slate-500">
+                                                {activity.subtitle} • {new Date(activity.date).toLocaleString()}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-sm text-slate-500">No recent activity.</p>
+                            )}
                         </div>
                         <Button variant="link" className="mt-4 w-full">
                             View Full Activity Log →

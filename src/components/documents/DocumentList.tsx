@@ -25,7 +25,7 @@ import { formatDate } from '@/lib/utils'
 // Mock data
 const MOCK_DOCS: Document[] = [
     {
-        id: '1',
+        documentId: '1',
         caseId: '1',
         name: 'Complaint.pdf',
         type: 'pleading',
@@ -39,7 +39,7 @@ const MOCK_DOCS: Document[] = [
         updatedAt: '2024-01-15T10:00:00Z'
     },
     {
-        id: '2',
+        documentId: '2',
         caseId: '1',
         name: 'Contract_Agreement.pdf',
         type: 'contract',
@@ -53,7 +53,7 @@ const MOCK_DOCS: Document[] = [
         updatedAt: '2024-01-16T14:30:00Z'
     },
     {
-        id: '3',
+        documentId: '3',
         caseId: '1',
         name: 'Email_Thread_Jan2024.pdf',
         type: 'evidence',
@@ -95,7 +95,7 @@ export function DocumentList() {
                 </TableHeader>
                 <TableBody>
                     {MOCK_DOCS.map((doc) => (
-                        <TableRow key={doc.id}>
+                        <TableRow key={doc.documentId}>
                             <TableCell className="font-medium">
                                 <div className="flex items-center gap-2">
                                     <FileText className="h-4 w-4 text-blue-500" />

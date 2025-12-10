@@ -102,7 +102,7 @@ export default function DocumentsPage() {
             {/* Case List */}
             <div className="space-y-4">
                 {filteredCases.map((caseItem) => (
-                    <Link key={caseItem.caseId} href={`/cases/${caseItem.caseId}`}>
+                    <Link key={caseItem.caseId} href={`/documents/cases/${caseItem.caseId}`}>
                         <Card className="hover:shadow-md transition-shadow cursor-pointer border-slate-200 hover:border-blue-300 group">
                             <CardContent className="p-4 flex items-center gap-6">
                                 {/* Icon */}
