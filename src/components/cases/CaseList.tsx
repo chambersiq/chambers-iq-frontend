@@ -31,6 +31,7 @@ import {
 import { Case, CaseStatus, CasePriority } from '@/types/case'
 import { formatDate, formatTimeAgo } from '@/lib/utils'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { useCases, useDeleteCase } from '@/hooks/api/useCases'
 import { useAuth } from '@/hooks/api/useCompany'
 import { useClients } from '@/hooks/api/useClients'
@@ -68,10 +69,13 @@ export function CaseList() {
     const { user } = useAuth()
     const companyId = user?.companyId || ''
 
+    const searchParams = useSearchParams()
+    const initialClientFilter = searchParams.get('client') || 'all'
+
     const [searchTerm, setSearchTerm] = useState('')
     const [statusFilter, setStatusFilter] = useState<string>('all')
     const [priorityFilter, setPriorityFilter] = useState<string>('all')
-    const [clientFilter, setClientFilter] = useState<string>('all')
+    const [clientFilter, setClientFilter] = useState<string>(initialClientFilter)
 
     // Delete state
     const [caseToDelete, setCaseToDelete] = useState<Case | null>(null)

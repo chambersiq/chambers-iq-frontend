@@ -46,3 +46,29 @@ export function useCreateClient(companyId: string) {
         },
     });
 }
+
+export function useDeleteClient(companyId: string) {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (clientId: string) => {
+            await api.delete(`/companies/${companyId}/clients/${clientId}`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['clients', companyId] });
+        },
+    });
+}
+
+export function useUpdateClient(companyId: string) {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ clientId, data }: { clientId: string; data: Partial<ClientFormData> }) => {
+            const { data: response } = await api.put<Client>(`/companies/${companyId}/clients/${clientId}`, data);
+            return response;
+        },
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['clients', companyId] });
+            queryClient.invalidateQueries({ queryKey: ['client', companyId, data.clientId] });
+        },
+    });
+}

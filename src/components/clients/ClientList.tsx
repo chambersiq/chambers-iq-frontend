@@ -34,12 +34,32 @@ import { formatDate } from '@/lib/utils'
 import { useAuth } from '@/hooks/api/useCompany'
 import { useClients } from '@/hooks/api/useClients'
 
+// ... imports
+import { useRouter } from 'next/navigation'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { toast } from "sonner"
+import { useDeleteClient } from '@/hooks/api/useClients'
+
 export function ClientList() {
+    const router = useRouter()
     const { user } = useAuth()
-    const { data: clients = [], isLoading, error } = useClients(user.companyId)
+    const { data: clients = [], isLoading, error } = useClients(user?.companyId || '')
+    const deleteClientMutation = useDeleteClient(user?.companyId || '')
+
     const [searchTerm, setSearchTerm] = useState('')
     const [typeFilter, setTypeFilter] = useState<string>('all')
     const [statusFilter, setStatusFilter] = useState<string>('all')
+
+    const [clientToDelete, setClientToDelete] = useState<string | null>(null)
 
     if (isLoading) return <div>Loading clients...</div>
     if (error) return <div>Error loading clients</div>
@@ -57,6 +77,20 @@ export function ClientList() {
 
         return matchesSearch && matchesType && matchesStatus
     })
+
+    const handleDelete = async () => {
+        if (!clientToDelete) return
+
+        try {
+            await deleteClientMutation.mutateAsync(clientToDelete)
+            toast.success("Client deleted successfully")
+        } catch (error) {
+            toast.error("Failed to delete client")
+            console.error(error)
+        } finally {
+            setClientToDelete(null)
+        }
+    }
 
     return (
         <div className="space-y-4">
@@ -160,14 +194,17 @@ export function ClientList() {
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                <DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => router.push(`/clients/${client.clientId}`)}>
                                                     <Eye className="mr-2 h-4 w-4" /> View Details
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => router.push(`/clients/${client.clientId}/edit`)}>
                                                     <Edit className="mr-2 h-4 w-4" /> Edit Client
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
-                                                <DropdownMenuItem className="text-red-600">
+                                                <DropdownMenuItem
+                                                    className="text-red-600"
+                                                    onClick={() => setClientToDelete(client.clientId)}
+                                                >
                                                     <Trash2 className="mr-2 h-4 w-4" /> Delete
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
@@ -179,6 +216,23 @@ export function ClientList() {
                     </TableBody>
                 </Table>
             </div>
+
+            <AlertDialog open={!!clientToDelete} onOpenChange={() => setClientToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the client and all associated data.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }
