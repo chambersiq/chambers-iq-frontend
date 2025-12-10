@@ -80,7 +80,7 @@ export default function ClientDetailsPage({ params }: { params: { id: string } }
                                     <div className="font-semibold">Address</div>
                                     <div className="text-sm text-slate-600 whitespace-pre-line">
                                         {client.streetAddress}<br />
-                                        {client.city}, {client.state} {client.zipCode}
+                                        {client.city}, {client.state} {client.pincode}
                                     </div>
                                 </div>
                             </div>
