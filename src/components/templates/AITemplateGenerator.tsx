@@ -1,5 +1,3 @@
-'use client'
-
 import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -7,16 +5,28 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Sparkles, Loader2, Upload, FileText, X } from 'lucide-react'
+import { useUploadTemplateSample, useGenerateTemplate } from '@/hooks/api/useTemplates'
+import { useAuth } from '@/hooks/api/useCompany'
+import { toast } from 'sonner'
+import { v4 as uuidv4 } from 'uuid'
 
 interface AITemplateGeneratorProps {
     onGenerate: (content: string) => void
 }
 
 export function AITemplateGenerator({ onGenerate }: AITemplateGeneratorProps) {
+    const { user } = useAuth()
+    const companyId = user?.companyId || ''
+
+    // Hooks
+    const uploadSample = useUploadTemplateSample(companyId)
+    const generateTemplate = useGenerateTemplate(companyId)
+
     const [prompt, setPrompt] = useState('')
     const [files, setFiles] = useState<File[]>([])
     const [isGenerating, setIsGenerating] = useState(false)
     const [isOpen, setIsOpen] = useState(false)
+    const [statusMessage, setStatusMessage] = useState('')
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,39 +39,44 @@ export function AITemplateGenerator({ onGenerate }: AITemplateGeneratorProps) {
         setFiles(prev => prev.filter((_, i) => i !== index))
     }
 
-    const handleGenerate = () => {
+    const handleGenerate = async () => {
+        if (!prompt) return
+
         setIsGenerating(true)
-        // Simulate generation delay
-        setTimeout(() => {
-            setIsGenerating(false)
+        const generationId = uuidv4()
+
+        try {
+            // Step 1: Upload Documents
+            if (files.length > 0) {
+                setStatusMessage('Uploading sample documents...')
+                const uploadPromises = files.map(file =>
+                    uploadSample.mutateAsync({ generationId, file })
+                )
+                await Promise.all(uploadPromises)
+            }
+
+            // Step 2: Generate Template
+            setStatusMessage('Generating template with AI...')
+            const result = await generateTemplate.mutateAsync({ generationId, prompt })
+
+            // Step 3: Done
+            setStatusMessage('Done!')
             setIsOpen(false)
+            onGenerate(result.content)
 
-            // Mock generation logic
-            const fileNames = files.map(f => f.name).join(', ')
-            const generatedContent = `AGREEMENT
+            // Reset
+            setPrompt('')
+            setFiles([])
+            setStatusMessage('')
 
-This Agreement is made on {{current_date}} between {{client_name}} ("Client") and {{opposing_party}} ("Contractor").
-
-1. SERVICES
-Contractor agrees to provide the following services: ${prompt}
-
-2. REFERENCE MATERIALS
-Based on the provided sample documents:
-${files.length > 0 ? files.map(f => `> [Analyzed File: ${f.name}]`).join('\n') : '> No samples provided'}
-
-3. JURISDICTION
-This agreement shall be governed by the laws of [Jurisdiction].
-
-IN WITNESS WHEREOF, the parties have executed this Agreement.
-
-________________________
-{{client_name}}
-
-________________________
-{{opposing_party}}`
-
-            onGenerate(generatedContent)
-        }, 2000)
+        } catch (error) {
+            console.error(error)
+            toast.error("Failed to generate template", {
+                description: "There was an error processing your request. Please try again."
+            })
+        } finally {
+            setIsGenerating(false)
+        }
     }
 
     return (
@@ -69,14 +84,14 @@ ________________________
             <DialogTrigger asChild>
                 <Button variant="outline" className="gap-2">
                     <Sparkles className="h-4 w-4 text-purple-600" />
-                    Generate with AI
+                    Generate Template with AI
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>
                     <DialogTitle>Generate Template with AI</DialogTitle>
                     <DialogDescription>
-                        Describe the document and upload sample files (PDF, DOCX) to help the AI understand the style and structure.
+                        Describe the template you want to create and optionally upload sample files (PDF, DOCX) to guide the style.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -84,7 +99,7 @@ ________________________
                     <div className="space-y-2">
                         <Label>Description</Label>
                         <Textarea
-                            placeholder="e.g. Create a Non-Disclosure Agreement for a software contractor in California..."
+                            placeholder="e.g. Create a standard NDA for software development contractors..."
                             className="min-h-[80px]"
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
@@ -92,7 +107,7 @@ ________________________
                     </div>
 
                     <div className="space-y-2">
-                        <Label>Sample Documents</Label>
+                        <Label>Sample Documents (Optional)</Label>
                         <div className="grid gap-4">
                             <div
                                 className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-50 transition-colors"
@@ -144,12 +159,12 @@ ________________________
                         {isGenerating ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Generating...
+                                {statusMessage || 'Generating...'}
                             </>
                         ) : (
                             <>
                                 <Sparkles className="mr-2 h-4 w-4" />
-                                Generate Draft
+                                Generate Template
                             </>
                         )}
                     </Button>

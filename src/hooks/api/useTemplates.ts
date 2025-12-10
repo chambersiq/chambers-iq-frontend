@@ -36,3 +36,33 @@ export function useCreateTemplate(companyId: string) {
         },
     });
 }
+
+export function useUploadTemplateSample(companyId: string) {
+    return useMutation({
+        mutationFn: async ({ generationId, file }: { generationId: string, file: File }) => {
+            const formData = new FormData();
+            formData.append('file', file);
+            // formData.append('generation_id') is query param in route
+            const { data } = await api.post<{ status: string, s3Key: string }>(
+                `/companies/${companyId}/templates/ai/upload?generation_id=${generationId}`,
+                formData,
+                {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                }
+            );
+            return data;
+        },
+    });
+}
+
+export function useGenerateTemplate(companyId: string) {
+    return useMutation({
+        mutationFn: async ({ generationId, prompt }: { generationId: string, prompt: string }) => {
+            const { data } = await api.post<{ content: string }>(
+                `/companies/${companyId}/templates/ai/generate`,
+                { generationId, prompt }
+            );
+            return data;
+        },
+    });
+}
