@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation'
 
 // Mock lookup (in real app, fetch from API)
 import { useCase } from '@/hooks/api/useCases'
-import { useAuth } from '@/hooks/api/useCompany'
+import { useAuth } from '@/hooks/useAuth'
 
 export default function CaseDocumentsPage({ params }: { params: { id: string } }) {
     const router = useRouter()

@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@/hooks/api/useCompany'
+import { useAuth } from '@/hooks/useAuth'
 import { useClient } from '@/hooks/api/useClients'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'

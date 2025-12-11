@@ -14,7 +14,7 @@ import { Case, CaseFormData } from '@/types/case'
 import { useForm, FormProvider, Controller } from 'react-hook-form'
 import { useCreateCase, useUpdateCase } from '@/hooks/api/useCases'
 import { useClients } from '@/hooks/api/useClients'
-import { useAuth } from '@/hooks/api/useCompany'
+import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'sonner'
 import { useEffect } from 'react'
 

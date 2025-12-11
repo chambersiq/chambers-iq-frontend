@@ -12,7 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useClients } from '@/hooks/api/useClients'
-import { useAuth } from '@/hooks/api/useCompany'
+import { useAuth } from '@/hooks/useAuth'
 
 interface ClientAccessModalProps {
     isOpen: boolean

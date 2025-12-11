@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { useAuth, useCompany } from '@/hooks/api/useCompany'
+import { useCompany } from '@/hooks/api/useCompany'
+import { useAuth } from '@/hooks/useAuth'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export function CompanyProfile() {

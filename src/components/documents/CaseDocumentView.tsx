@@ -9,7 +9,7 @@ import { FileText, Plus, Trash2, Download, Eye, Sparkles, ChevronDown, ChevronUp
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { useDocuments, useDeleteDocument } from '@/hooks/api/useDocuments'
-import { useAuth } from '@/hooks/api/useCompany'
+import { useAuth } from '@/hooks/useAuth'
 
 // --- Helper Component for Inline Expandable Text ---
 // --- Helper Component for Inline Expandable Text ---

@@ -1,7 +1,7 @@
 'use client'
 
 import { ClientForm } from '@/components/clients/ClientForm'
-import { useAuth } from '@/hooks/api/useCompany'
+import { useAuth } from '@/hooks/useAuth'
 import { useClient } from '@/hooks/api/useClients'
 import { Skeleton } from '@/components/ui/skeleton'
 

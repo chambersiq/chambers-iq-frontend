@@ -16,7 +16,7 @@ import {
     Trash2,
 } from 'lucide-react'
 
-import { useAuth } from '@/hooks/api/useCompany'
+import { useAuth } from '@/hooks/useAuth'
 import { useDashboardStats } from '@/hooks/api/useDashboard'
 import { Skeleton } from '@/components/ui/skeleton'
 

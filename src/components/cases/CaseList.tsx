@@ -33,7 +33,7 @@ import { formatDate, formatTimeAgo } from '@/lib/utils'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useCases, useDeleteCase } from '@/hooks/api/useCases'
-import { useAuth } from '@/hooks/api/useCompany'
+import { useAuth } from '@/hooks/useAuth'
 import { useClients } from '@/hooks/api/useClients'
 import {
     AlertDialog,

@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Plus, Shield, ShieldAlert, Settings, Crown, MoreHorizontal, Edit, Trash2 } from 'lucide-react'
-import { useAuth } from '@/hooks/api/useCompany'
+import { useAuth } from '@/hooks/useAuth'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '@/lib/api'
 import { User } from '@/types/user'

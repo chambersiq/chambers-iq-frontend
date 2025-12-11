@@ -12,6 +12,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { DOCUMENT_TYPES } from '@/lib/constants'
 import {
     Select,
     SelectContent,
@@ -32,7 +33,7 @@ import { TemplateCategory } from '@/types/template'
 import { formatDate } from '@/lib/utils'
 import Link from 'next/link'
 import { useTemplates } from '@/hooks/api/useTemplates'
-import { useAuth } from '@/hooks/api/useCompany'
+import { useAuth } from '@/hooks/useAuth'
 
 const CATEGORY_COLORS: Record<TemplateCategory, string> = {
     'contract': 'default',
@@ -82,11 +83,11 @@ export function TemplateList() {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Categories</SelectItem>
-                            <SelectItem value="contract">Contracts</SelectItem>
-                            <SelectItem value="motion">Motions</SelectItem>
-                            <SelectItem value="pleading">Pleadings</SelectItem>
-                            <SelectItem value="letter">Letters</SelectItem>
-                            <SelectItem value="discovery">Discovery</SelectItem>
+                            {DOCUMENT_TYPES.map(type => (
+                                <SelectItem key={type.value} value={type.category}>
+                                    {type.label}
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>

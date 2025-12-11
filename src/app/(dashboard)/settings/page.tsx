@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { TeamManagement } from '@/components/settings/TeamManagement'
 import { CompanyProfile } from '@/components/settings/CompanyProfile'
 import { User, Mail, Lock, Building } from 'lucide-react'
-import { useAuth } from '@/hooks/api/useCompany'
+import { useAuth } from '@/hooks/useAuth'
 
 export default function SettingsPage() {
     const { user } = useAuth()

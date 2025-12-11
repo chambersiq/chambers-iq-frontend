@@ -10,7 +10,7 @@ import { CompanyClientForm } from './CompanyClientForm'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { useCreateClient, useUpdateClient } from '@/hooks/api/useClients'
-import { useAuth } from '@/hooks/api/useCompany'
+import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'sonner'
 
 export interface ClientFormProps {

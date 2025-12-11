@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Sparkles, Loader2, Upload, FileText, X } from 'lucide-react'
 import { useUploadTemplateSample, useStartWorkflow } from '@/hooks/api/useTemplates'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/hooks/api/useCompany'
+import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'sonner'
 import { v4 as uuidv4 } from 'uuid'
 

@@ -4,7 +4,8 @@ import { Bell, Search, LogOut, Shield, ShieldAlert, Crown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { signOut } from 'next-auth/react'
 
-import { useAuth } from '@/hooks/api/useCompany'
+import { useCompany } from '@/hooks/api/useCompany'
+import { useAuth } from '@/hooks/useAuth'
 import { getInitials } from '@/lib/utils'
 
 export function Header() {

@@ -19,26 +19,10 @@ export interface User {
     role: string;
 }
 
-import { useSession } from 'next-auth/react';
-
 // ... existing imports ...
 
-// Hook to get the current authenticated user from NextAuth
-export function useAuth() {
-    const { data: session, status } = useSession();
+// useAuth has been moved to src/hooks/useAuth.ts
 
-    return {
-        user: {
-            userId: session?.user?.userId || '',
-            companyId: session?.user?.companyId || '', // This will now come from the DB
-            email: session?.user?.email || '',
-            fullName: session?.user?.name || '',
-            role: session?.user?.role || 'user'
-        },
-        isAuthenticated: status === 'authenticated',
-        isLoading: status === 'loading'
-    };
-}
 
 export function useCompany(companyId: string) {
     return useQuery({

@@ -1,16 +1,18 @@
 export type DraftStatus = 'draft' | 'review' | 'final'
 
 export interface Draft {
-    id: string
+    draftId: string
     name: string
     caseId: string
-    caseName: string
+    caseName?: string
     clientId: string
-    clientName: string
+    clientName?: string
     status: DraftStatus
     content: string
     lastEditedAt: string
     createdAt: string
+    companyId: string
+    archived?: boolean
 }
 
 export interface ChatMessage {

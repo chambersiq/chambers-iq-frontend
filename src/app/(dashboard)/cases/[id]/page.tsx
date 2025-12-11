@@ -21,7 +21,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { useAuth } from '@/hooks/api/useCompany'
+import { useAuth } from '@/hooks/useAuth'
 import { useCase } from '@/hooks/api/useCases'
 import { formatCurrency, formatDate } from '@/lib/utils'
 

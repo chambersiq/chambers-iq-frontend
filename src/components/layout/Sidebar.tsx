@@ -61,7 +61,8 @@ import { getInitials } from '@/lib/utils'
 
 // ... existing imports ...
 
-import { useAuth, useCompany } from '@/hooks/api/useCompany'
+import { useCompany } from '@/hooks/api/useCompany'
+import { useAuth } from '@/hooks/useAuth'
 
 import { useSidebarState } from '@/hooks/useSidebarState'
 import { ChevronLeft, ChevronRight } from 'lucide-react'

@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { Client, ClientFormData } from '@/types/client';
 
-import { useAuth } from '@/hooks/api/useCompany';
+import { useAuth } from '@/hooks/useAuth'
 
 export function useClients(companyId: string) {
     const { user } = useAuth();

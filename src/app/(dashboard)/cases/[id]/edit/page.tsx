@@ -2,7 +2,7 @@
 
 import { CaseForm } from '@/components/cases/CaseForm'
 import { useCase, useCases } from '@/hooks/api/useCases'
-import { useAuth } from '@/hooks/api/useCompany'
+import { useAuth } from '@/hooks/useAuth'
 
 export default function EditCasePage({ params }: { params: { id: string } }) {
     const { user } = useAuth()

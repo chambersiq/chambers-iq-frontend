@@ -31,7 +31,7 @@ import {
 import { Client } from '@/types/client'
 import { formatDate } from '@/lib/utils'
 
-import { useAuth } from '@/hooks/api/useCompany'
+import { useAuth } from '@/hooks/useAuth'
 import { useClients } from '@/hooks/api/useClients'
 
 // ... imports

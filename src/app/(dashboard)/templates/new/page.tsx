@@ -9,7 +9,7 @@ import { ArrowLeft, Save, Sparkles, Send, RefreshCw, MessageSquare, Loader2 } fr
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useCreateTemplate, useGetWorkflowStatus, useReviewWorkflow } from '@/hooks/api/useTemplates'
-import { useAuth } from '@/hooks/api/useCompany'
+import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { TemplateCategory } from '@/types/template'

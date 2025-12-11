@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select"
 import { useCases } from '@/hooks/api/useCases'
 import { useClients } from '@/hooks/api/useClients'
-import { useAuth } from '@/hooks/api/useCompany'
+import { useAuth } from '@/hooks/useAuth'
 
 export default function DocumentsPage() {
     const { user } = useAuth()
