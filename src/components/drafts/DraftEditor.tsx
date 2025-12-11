@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { AIChatPanel } from './AIChatPanel'
+import { MultiAgentWorkflowManager } from './MultiAgentWorkflowManager'
 import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, List, Save, ArrowLeft, FileText, BookOpen } from 'lucide-react'
 import Link from 'next/link'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 
+import { useQueryClient } from '@tanstack/react-query'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import UnderlineExtension from '@tiptap/extension-underline'
@@ -34,6 +34,8 @@ export function DraftEditor() {
     // Initial content
     const [content, setContent] = useState('')
     const [name, setName] = useState('')
+    const [forceUpdate, setForceUpdate] = useState(false)
+    const queryClient = useQueryClient()
 
     const editor = useEditor({
         extensions: [
@@ -55,7 +57,7 @@ export function DraftEditor() {
         },
     })
 
-    // Sync draft content once loaded
+    // Sync draft content once loaded or Forced
     useEffect(() => {
         if (!draft) return
 
@@ -68,27 +70,42 @@ export function DraftEditor() {
 
         // Sync Content
         if (editor && draft.content) {
-            // Check if editor content matches draft content to avoid loops
-            // But also we need to ensure we populate it on first load
             const currentContent = editor.getHTML()
-            // Tiptap might add wrapper tags, so exact match is tricky. 
-            // Better to rely on a "initialized" flag or something, but checking equality is a good first step.
-            // We'll trust the draft data if the editor is essentially empty or if we assume this is the first load.
-
-            // Simplest check: if current content is default empty P tag and draft has content
             const isEmpty = currentContent === '<p></p>' || currentContent === ''
 
-            if (isEmpty || currentContent !== draft.content) {
-                // Only force update if we think we are initializing
-                // Using a simple check to see if we have set it before might be better.
-                if (content === '') { // Use 'content' state as proxy for "have we loaded initial data?"
-                    console.log('Setting editor content from draft')
+            // Update if:
+            // 1. Editor is empty (Initial load)
+            // 2. forceUpdate is true (Workflow completed)
+            if (isEmpty || forceUpdate) {
+                // Check if content actually changed to avoid unnecessary re-renders or loops if logic is flawed
+                if (currentContent !== draft.content) {
+                    console.log('Setting editor content from draft (Force/Init)')
                     editor.commands.setContent(draft.content)
                     setContent(draft.content)
+                    setForceUpdate(false) // Reset flag
                 }
             }
         }
-    }, [draft, editor]) // content dependency removed to avoid loop? No, content state is updated by editor update.
+    }, [draft, editor, forceUpdate])
+
+    const handleWorkflowComplete = () => {
+        console.log('Workflow complete, refreshing draft...')
+        queryClient.invalidateQueries({ queryKey: ['draft', companyId, draftId] })
+        setForceUpdate(true)
+        toast.success('Draft updated with agent content')
+    }
+
+    const handleWorkflowProgress = (partialContent: string) => {
+        if (editor) {
+            // Only update if content length is different significantly to avoid jitter
+            // Or just update. Tiptap handles HTML string diffing reasonably well usually.
+            // But we check strictly to avoid loops if needed.
+            const current = editor.getHTML()
+            if (current !== partialContent) {
+                editor.commands.setContent(partialContent)
+            }
+        }
+    }
 
     const handleSave = async () => {
         if (!editor) return
@@ -127,17 +144,52 @@ export function DraftEditor() {
                             <ArrowLeft className="h-4 w-4" />
                         </Button>
                     </Link>
-                    <div>
+                    <div className="flex items-center gap-4">
                         <input
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="font-semibold text-sm bg-transparent border-none focus:outline-none focus:ring-0 p-0 m-0 w-[300px]"
+                            className="font-bold text-lg bg-transparent border-none focus:outline-none focus:ring-0 p-0 m-0 w-auto min-w-[150px] max-w-[300px]"
                             placeholder="Untitled Draft"
                         />
-                        <p className="text-xs text-muted-foreground">
-                            {draft?.lastEditedAt ? `Last saved at ${new Date(draft.lastEditedAt).toLocaleTimeString()}` : 'Unsaved'}
-                        </p>
+
+                        {/* Context Info - Inline & Bigger */}
+                        <div className="flex items-center gap-3 text-sm text-slate-500 h-8 pt-1">
+                            <span className="text-slate-300 text-xl font-light">/</span>
+
+                            {draft?.caseName && (
+                                <span className="flex items-center gap-1.5 font-medium text-slate-700 hover:text-indigo-600 transition-colors cursor-pointer">
+                                    <BookOpen className="h-4 w-4 text-slate-400" />
+                                    {draft.caseName}
+                                </span>
+                            )}
+
+                            {draft?.clientName && (
+                                <>
+                                    <span className="text-slate-300">•</span>
+                                    <span className="text-slate-600">Client: <span className="font-medium text-slate-800">{draft.clientName}</span></span>
+                                </>
+                            )}
+
+                            {draft?.templateName && (
+                                <>
+                                    <span className="text-slate-300">•</span>
+                                    <span className="text-slate-600">Template: <span className="font-medium text-slate-800">{draft.templateName}</span></span>
+                                </>
+                            )}
+
+                            {draft?.documentType && draft.documentType !== "General" && (
+                                <>
+                                    <span className="text-slate-300">•</span>
+                                    <span className="text-slate-600">Type: <span className="font-medium text-slate-800">{draft.documentType}</span></span>
+                                </>
+                            )}
+
+                            <span className="text-slate-300">•</span>
+                            <span className="text-slate-500 text-xs">
+                                {draft?.lastEditedAt ? `Saved ${new Date(draft.lastEditedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Unsaved'}
+                            </span>
+                        </div>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -188,70 +240,22 @@ export function DraftEditor() {
                     </div>
 
                     {/* Document Page */}
-                    <div className="flex-1 overflow-y-auto p-8 flex justify-center print:p-0 print:overflow-visible print:block" onClick={() => editor.chain().focus().run()}>
-                        <div className="bg-white shadow-sm border w-full max-w-[816px] min-h-[1056px] print:shadow-none print:border-none print:w-full print:max-w-none print:min-h-0">
+                    <div className="flex-1 overflow-y-auto p-4 flex justify-center print:p-0 print:overflow-visible print:block" onClick={() => editor.chain().focus().run()}>
+                        <div className="bg-white shadow-sm border w-full max-w-5xl min-h-[1056px] print:shadow-none print:border-none print:w-full print:max-w-none print:min-h-0">
                             <EditorContent editor={editor} />
                         </div>
                     </div>
                 </div>
 
-                {/* Right Sidebar (AI & Context) */}
+                {/* Right Sidebar (Agents Only) */}
                 <div className="w-[400px] border-l bg-white flex flex-col shrink-0 print:hidden">
-                    <Tabs defaultValue="chat" className="flex-1 flex flex-col">
-                        <TabsList className="w-full justify-start rounded-none border-b p-0 h-10 bg-white">
-                            <TabsTrigger value="chat" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none px-6">
-                                AI Assistant
-                            </TabsTrigger>
-                            <TabsTrigger value="context" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none px-6">
-                                Case Context
-                            </TabsTrigger>
-                        </TabsList>
-
-                        <TabsContent value="chat" className="flex-1 m-0 p-0 h-full overflow-hidden">
-                            <AIChatPanel />
-                        </TabsContent>
-
-                        <TabsContent value="context" className="flex-1 m-0 p-4 overflow-y-auto bg-slate-50">
-                            <div className="space-y-4">
-                                <Card>
-                                    <CardHeader className="pb-2">
-                                        <CardTitle className="text-sm font-medium flex items-center gap-2">
-                                            <BookOpen className="h-4 w-4" /> Case Summary
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="text-sm text-slate-600">
-                                        {draft?.caseName || 'Case details not available'}
-                                        {/* Ideally we fetch detailed case info here */}
-                                    </CardContent>
-                                </Card>
-
-                                <Card>
-                                    <CardHeader className="pb-2">
-                                        <CardTitle className="text-sm font-medium">Key Facts</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="text-sm text-slate-600 space-y-2">
-                                        <p>• Contract signed March 15, 2024</p>
-                                        <p>• Work completed June 30, 2024</p>
-                                        <p>• Payment due July 15, 2024</p>
-                                    </CardContent>
-                                </Card>
-
-                                <Card>
-                                    <CardHeader className="pb-2">
-                                        <CardTitle className="text-sm font-medium">Parties</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="text-sm text-slate-600 space-y-2">
-                                        <div>
-                                            <span className="font-semibold">Petitioner:</span> John Smith
-                                        </div>
-                                        <div>
-                                            <span className="font-semibold">Respondent:</span> Acme Corp
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        </TabsContent>
-                    </Tabs>
+                    <MultiAgentWorkflowManager
+                        caseId={draft?.caseId || 'demo-case'}
+                        caseType={draft?.caseType || 'General'}
+                        clientId={draft?.clientId || 'demo-client'}
+                        onWorkflowComplete={handleWorkflowComplete}
+                        onWorkflowProgress={handleWorkflowProgress}
+                    />
                 </div>
             </div>
         </div>

@@ -13,6 +13,10 @@ export interface Draft {
     createdAt: string
     companyId: string
     archived?: boolean
+    templateId?: string
+    templateName?: string
+    documentType?: string
+    caseType?: string
 }
 
 export interface ChatMessage {

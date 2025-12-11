@@ -112,8 +112,8 @@ DATE: ${new Date().toLocaleDateString()}
                     content: initialContent,
                     status: 'draft',
                     clientId: clientId, // Backend should handle this or we send it
-                    // Note: Backend create_draft takes DraftCreate which has name, content, etc. 
-                    // It extracts caseId from URL.
+                    templateId: templateId !== 'blank' ? templateId : undefined,
+                    documentType: DOCUMENT_TYPES.find(d => d.value === docType)?.label || docType
                 }
             })
 
