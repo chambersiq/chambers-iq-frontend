@@ -15,6 +15,10 @@ import {
     Shield,
     ShieldAlert,
     Crown,
+    Sparkles,
+    LogOut,
+    ChevronLeft,
+    ChevronRight,
 } from 'lucide-react'
 
 const navigation = [
@@ -44,6 +48,11 @@ const navigation = [
         icon: FileType,
     },
     {
+        name: 'AI Assistant',
+        href: '/assistant',
+        icon: Sparkles,
+    },
+    {
         name: 'Drafting',
         href: '/drafts',
         icon: Edit3,
@@ -56,7 +65,6 @@ const secondaryNavigation = [
 ]
 
 import { signOut, useSession } from 'next-auth/react'
-import { LogOut } from 'lucide-react'
 import { getInitials } from '@/lib/utils'
 
 // ... existing imports ...
@@ -65,7 +73,6 @@ import { useCompany } from '@/hooks/api/useCompany'
 import { useAuth } from '@/hooks/useAuth'
 
 import { useSidebarState } from '@/hooks/useSidebarState'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 export function Sidebar() {
     const pathname = usePathname()
