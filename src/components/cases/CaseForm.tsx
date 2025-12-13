@@ -9,6 +9,7 @@ import { CaseSummarySection } from './CaseSummarySection'
 import { PartiesSection } from './PartiesSection'
 import { ImportantDatesSection } from './ImportantDatesSection'
 import { FinancialSection } from './FinancialSection'
+import { CourtDetailsSection } from './CourtDetailsSection'
 import { useRouter } from 'next/navigation'
 import { Case, CaseFormData } from '@/types/case'
 import { useForm, FormProvider, Controller } from 'react-hook-form'
@@ -33,18 +34,44 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
     const createCase = useCreateCase(companyId)
     const updateCase = useUpdateCase(companyId)
 
+    const normType = (t?: string) => {
+        if (!t) return undefined;
+        const lower = t.toLowerCase();
+        // Common legacy mappings
+        if (lower === 'civil') return 'civil-litigation';
+        if (lower === 'criminal') return 'criminal-defense';
+        if (lower === 'family') return 'family-law';
+        return lower;
+    }
+
+    const normPri = (p?: string) => p?.toLowerCase();
+
+    const normFee = (f?: string) => {
+        if (!f) return 'hourly';
+        const lower = f.toLowerCase();
+        if (lower.includes('hourly')) return 'hourly';
+        if (lower.includes('flat')) return 'flat-fee';
+        if (lower.includes('contingency')) return 'contingency';
+        if (lower.includes('hybrid')) return 'hybrid';
+        if (lower.includes('bono')) return 'pro-bono';
+        return lower.replace(' ', '-');
+    }
+
+    const normLower = (s?: string) => s?.toLowerCase();
+
     const methods = useForm<CaseFormData>({
         defaultValues: {
             caseName: initialData?.caseName || '',
             caseNumber: initialData?.caseNumber || '',
             clientId: initialData?.clientId || '',
-            status: initialData?.status || 'draft',
-            caseType: initialData?.caseType,
-            priority: initialData?.priority || 'medium',
-            feeArrangement: initialData?.feeArrangement || 'hourly',
+            status: normLower(initialData?.status) as any || 'draft',
+            caseType: normType(initialData?.caseType),
+            priority: normPri(initialData?.priority) as any || 'medium',
+            feeArrangement: normFee(initialData?.feeArrangement),
             caseSummary: initialData?.caseSummary || '',
             // Initialize other fields as needed, or let them be undefined
             ...initialData,
+            opposingPartyType: normLower(initialData?.opposingPartyType) as any || 'individual',
             // Override keyFacts in spread to ensure it's the string version
             keyFacts: Array.isArray(initialData?.keyFacts)
                 ? initialData.keyFacts.join('\n')
@@ -280,6 +307,7 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
 
                 {/* Sections */}
                 <CaseSummarySection />
+                <CourtDetailsSection />
                 <PartiesSection />
                 <ImportantDatesSection />
                 <FinancialSection />

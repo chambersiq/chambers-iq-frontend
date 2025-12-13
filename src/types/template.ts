@@ -21,6 +21,8 @@ export interface Template {
     category: TemplateCategory
     content: string // HTML or Markdown
     variables: TemplateVariable[]
+    documentType?: string
+    caseType?: string
     isSystem: boolean // System templates cannot be deleted
     createdAt: string
     updatedAt: string

@@ -31,7 +31,8 @@ import { Input } from '@/components/ui/input'
 import { formatDate, formatTimeAgo } from '@/lib/utils'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
-import { useDrafts } from '@/hooks/api/useDrafts'
+import { useDrafts, useDeleteDraft } from '@/hooks/api/useDrafts'
+import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 
 interface DraftListProps {
@@ -41,6 +42,18 @@ interface DraftListProps {
 export function DraftList({ caseId }: DraftListProps) {
     const { user } = useAuth()
     const { data: drafts = [], isLoading, error } = useDrafts(user?.companyId || '', caseId)
+    const { mutateAsync: deleteDraft } = useDeleteDraft(user?.companyId || '')
+
+    const handleDelete = async (draftId: string) => {
+        if (!window.confirm("Are you sure you want to delete this draft?")) return
+        try {
+            await deleteDraft(draftId)
+            toast.success("Draft deleted")
+        } catch (err) {
+            console.error(err)
+            toast.error("Failed to delete draft")
+        }
+    }
 
     const [searchTerm, setSearchTerm] = useState('')
     const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -213,7 +226,7 @@ export function DraftList({ caseId }: DraftListProps) {
                                                     </DropdownMenuItem>
                                                 )}
                                                 <DropdownMenuSeparator />
-                                                <DropdownMenuItem className="text-red-600">
+                                                <DropdownMenuItem className="text-red-600 focus:text-red-600 cursor-pointer" onClick={() => handleDelete(draft.draftId)}>
                                                     <Trash2 className="mr-2 h-4 w-4" /> Delete
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>

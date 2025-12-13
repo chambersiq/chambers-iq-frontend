@@ -47,11 +47,7 @@ const navigation = [
         href: '/templates',
         icon: FileType,
     },
-    {
-        name: 'AI Assistant',
-        href: '/assistant',
-        icon: Sparkles,
-    },
+
     {
         name: 'Drafting',
         href: '/drafts',
@@ -60,6 +56,7 @@ const navigation = [
 ]
 
 const secondaryNavigation = [
+    { name: 'AI Assistant', href: '/assistant', icon: Sparkles },
     { name: 'Settings', href: '/settings', icon: Settings },
     { name: 'Help', href: '/help', icon: HelpCircle },
 ]
@@ -84,7 +81,7 @@ export function Sidebar() {
 
     return (
         <div className={cn(
-            "flex h-full flex-col bg-slate-900 text-white transition-all duration-300 ease-in-out relative",
+            "flex h-full flex-col bg-slate-900 text-white transition-all duration-300 ease-in-out relative print:hidden",
             isCollapsed ? "w-20" : "w-64"
         )}>
             {/* Toggle Button */}

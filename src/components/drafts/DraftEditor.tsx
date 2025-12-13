@@ -49,7 +49,7 @@ export function DraftEditor() {
         immediatelyRender: false,
         editorProps: {
             attributes: {
-                class: 'w-full h-full min-h-[1056px] focus:outline-none focus-visible:ring-0 p-8 text-base leading-relaxed font-serif prose max-w-none print:p-0 print:border-none print:shadow-none',
+                class: 'w-full h-full min-h-[1056px] focus:outline-none focus-visible:ring-0 p-8 text-base leading-relaxed font-serif prose prose-slate max-w-none w-full break-words whitespace-normal print:p-0 print:border-none print:shadow-none',
             },
         },
         onUpdate: ({ editor }) => {
@@ -135,7 +135,7 @@ export function DraftEditor() {
     }
 
     return (
-        <div className="h-[calc(100vh-4rem)] flex flex-col print:h-auto print:block">
+        <div className="h-full flex flex-col print:h-auto print:block">
             {/* Header */}
             <div className="h-14 border-b bg-white flex items-center justify-between px-4 shrink-0 print:hidden">
                 <div className="flex items-center gap-4">
@@ -241,7 +241,7 @@ export function DraftEditor() {
 
                     {/* Document Page */}
                     <div className="flex-1 overflow-y-auto p-4 flex justify-center print:p-0 print:overflow-visible print:block" onClick={() => editor.chain().focus().run()}>
-                        <div className="bg-white shadow-sm border w-full max-w-5xl min-h-[1056px] print:shadow-none print:border-none print:w-full print:max-w-none print:min-h-0">
+                        <div className="bg-white shadow-sm border w-full max-w-5xl min-h-[1056px] overflow-hidden print:shadow-none print:border-none print:w-full print:max-w-none print:min-h-0">
                             <EditorContent editor={editor} />
                         </div>
                     </div>

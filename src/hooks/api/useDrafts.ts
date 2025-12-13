@@ -58,3 +58,15 @@ export function useUpdateDraft(companyId: string) {
         },
     });
 }
+
+export function useDeleteDraft(companyId: string) {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (draftId: string) => {
+            await api.delete(`/${companyId}/drafts/${draftId}`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['drafts', companyId] });
+        },
+    });
+}

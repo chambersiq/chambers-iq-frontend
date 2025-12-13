@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { TemplateCategory } from '@/types/template'
+import { DOCUMENT_TYPES } from '@/lib/constants'
 import {
     Select,
     SelectContent,
@@ -222,12 +223,11 @@ function NewTemplateContent() {
                                     <SelectValue placeholder="Category" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="contract">Contract</SelectItem>
-                                    <SelectItem value="motion">Motion</SelectItem>
-                                    <SelectItem value="pleading">Pleading</SelectItem>
-                                    <SelectItem value="letter">Letter</SelectItem>
-                                    <SelectItem value="discovery">Discovery</SelectItem>
-                                    <SelectItem value="other">Other</SelectItem>
+                                    {DOCUMENT_TYPES.map(type => (
+                                        <SelectItem key={type.value} value={type.category}>
+                                            {type.label}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                             <Input

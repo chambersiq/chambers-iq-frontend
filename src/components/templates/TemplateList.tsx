@@ -32,8 +32,19 @@ import {
 import { TemplateCategory } from '@/types/template'
 import { formatDate } from '@/lib/utils'
 import Link from 'next/link'
-import { useTemplates } from '@/hooks/api/useTemplates'
+import { useTemplates, useDeleteTemplate } from '@/hooks/api/useTemplates'
 import { useAuth } from '@/hooks/useAuth'
+import { toast } from 'sonner'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 const CATEGORY_COLORS: Record<TemplateCategory, string> = {
     'contract': 'default',
@@ -44,13 +55,36 @@ const CATEGORY_COLORS: Record<TemplateCategory, string> = {
     'other': 'secondary'
 }
 
+function DescriptionCell({ description }: { description: string }) {
+    const [isExpanded, setIsExpanded] = useState(false)
+    const maxLength = 60
+
+    if (!description) return <span className="text-muted-foreground">-</span>
+
+    if (description.length <= maxLength) return <span>{description}</span>
+
+    return (
+        <div className="max-w-[300px]">
+            <span>{isExpanded ? description : `${description.slice(0, maxLength)}...`}</span>
+            <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="ml-2 text-xs font-medium text-blue-600 hover:text-blue-800"
+            >
+                {isExpanded ? 'Show Less' : 'Show More'}
+            </button>
+        </div>
+    )
+}
+
 export function TemplateList() {
     const { user } = useAuth()
     const companyId = user?.companyId || ''
     const { data: templates = [], isLoading } = useTemplates(companyId)
+    const deleteTemplate = useDeleteTemplate(companyId)
 
     const [searchTerm, setSearchTerm] = useState('')
     const [categoryFilter, setCategoryFilter] = useState<string>('all')
+    const [templateToDelete, setTemplateToDelete] = useState<string | null>(null)
 
     const filteredTemplates = templates.filter(t => {
         const matchesSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -59,12 +93,45 @@ export function TemplateList() {
         return matchesSearch && matchesCategory
     })
 
+    const handleDelete = async (templateId: string) => {
+        try {
+            await deleteTemplate.mutateAsync(templateId)
+            toast.success('Template deleted successfully')
+            setTemplateToDelete(null)
+        } catch (error) {
+            console.error('Failed to delete template', error)
+            toast.error('Failed to delete template')
+        }
+    }
+
     if (isLoading) {
         return <div className="p-8 text-center text-slate-500">Loading templates...</div>
     }
 
+    const templateToDeleteName = templates.find(t => t.templateId === templateToDelete)?.name
+
     return (
         <div className="space-y-4">
+            <AlertDialog open={!!templateToDelete} onOpenChange={(open) => !open && setTemplateToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Template</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete <span className="font-semibold text-foreground">"{templateToDeleteName}"</span>? This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            className="bg-red-600 hover:bg-red-700"
+                            onClick={() => templateToDelete && handleDelete(templateToDelete)}
+                        >
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
             {/* Filters */}
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex flex-1 items-center gap-2">
@@ -100,6 +167,7 @@ export function TemplateList() {
                         <TableRow>
                             <TableHead>Name</TableHead>
                             <TableHead>Category</TableHead>
+                            <TableHead className="w-[300px]">Description</TableHead>
                             <TableHead>Last Updated</TableHead>
                             <TableHead>Created By</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
@@ -108,7 +176,7 @@ export function TemplateList() {
                     <TableBody>
                         {filteredTemplates.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="h-24 text-center">
+                                <TableCell colSpan={6} className="h-24 text-center">
                                     No templates found.
                                 </TableCell>
                             </TableRow>
@@ -121,13 +189,15 @@ export function TemplateList() {
                                                 <FileType className="h-4 w-4" />
                                                 {t.name}
                                             </Link>
-                                            <span className="text-xs text-muted-foreground">{t.description}</span>
                                         </div>
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant={CATEGORY_COLORS[t.category] as any} className="capitalize">
                                             {t.category}
                                         </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-sm">
+                                        <DescriptionCell description={t.description} />
                                     </TableCell>
                                     <TableCell className="text-sm text-muted-foreground">
                                         {formatDate(t.updatedAt)}
@@ -156,7 +226,10 @@ export function TemplateList() {
                                                 {!t.isSystem && (
                                                     <>
                                                         <DropdownMenuSeparator />
-                                                        <DropdownMenuItem className="text-red-600">
+                                                        <DropdownMenuItem
+                                                            className="text-red-600 cursor-pointer"
+                                                            onClick={() => setTemplateToDelete(t.templateId)}
+                                                        >
                                                             <Trash2 className="mr-2 h-4 w-4" /> Delete
                                                         </DropdownMenuItem>
                                                     </>

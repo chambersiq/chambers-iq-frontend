@@ -1,6 +1,7 @@
 export const DOCUMENT_TYPES = [
     { value: 'contract', label: 'Contract', category: 'contract' },
-    { value: 'motion', label: 'Motion / Pleading', category: 'motion' },
+    { value: 'motion', label: 'Motion', category: 'motion' },
+    { value: 'pleading', label: 'Pleading', category: 'pleading' },
     { value: 'letter', label: 'Letter', category: 'letter' },
     { value: 'discovery', label: 'Discovery', category: 'discovery' },
     { value: 'other', label: 'Other', category: 'other' },

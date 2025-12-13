@@ -37,6 +37,18 @@ export function useCreateTemplate(companyId: string) {
     });
 }
 
+export function useDeleteTemplate(companyId: string) {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (templateId: string) => {
+            await api.delete(`/companies/${companyId}/templates/${templateId}`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['templates', companyId] });
+        },
+    });
+}
+
 export function useUploadTemplateSample(companyId: string) {
     return useMutation({
         mutationFn: async ({ generationId, file }: { generationId: string, file: File }) => {

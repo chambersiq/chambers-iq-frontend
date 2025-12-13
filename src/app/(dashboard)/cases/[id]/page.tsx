@@ -134,18 +134,73 @@ export default function CaseDetailPage({ params }: { params: { id: string } }) {
                             <CardTitle>Case Summary</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-slate-700 leading-relaxed whitespace-pre-line">
+                            <p className="text-slate-700 leading-relaxed whitespace-pre-line mb-6">
                                 {caseData.caseSummary || 'No summary provided.'}
                             </p>
 
-                            <div className="mt-6 grid gap-6 md:grid-cols-2">
-                                <div className="rounded-lg bg-slate-50 p-4">
+                            {/* Detailed Strategy Sections */}
+                            <div className="space-y-6 pt-6 border-t">
+                                {(caseData.keyFacts && caseData.keyFacts.length > 0) && (
+                                    <div>
+                                        <h4 className="font-semibold mb-2">Key Facts</h4>
+                                        <ul className="list-disc pl-5 text-sm text-slate-600 space-y-1">
+                                            {caseData.keyFacts.map((fact, i) => <li key={i}>{fact}</li>)}
+                                        </ul>
+                                    </div>
+                                )}
+
+                                <div className="grid gap-6 md:grid-cols-2">
+                                    {(caseData.legalIssues) && (
+                                        <div>
+                                            <h4 className="font-semibold mb-2">Legal Issues</h4>
+                                            <p className="text-sm text-slate-600 whitespace-pre-line">{caseData.legalIssues}</p>
+                                        </div>
+                                    )}
+                                    {(caseData.prayer) && (
+                                        <div>
+                                            <h4 className="font-semibold mb-2">Prayer / Relief Sought</h4>
+                                            <p className="text-sm text-slate-600 whitespace-pre-line">{caseData.prayer}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="mt-6 grid gap-6 md:grid-cols-2 bg-slate-50 p-4 rounded-lg">
+                                <div>
                                     <h4 className="font-semibold mb-2">Client Position</h4>
                                     <p className="text-sm text-slate-600">{caseData.clientPosition || 'Not specified'}</p>
                                 </div>
-                                <div className="rounded-lg bg-slate-50 p-4">
+                                <div>
                                     <h4 className="font-semibold mb-2">Opposing Position</h4>
                                     <p className="text-sm text-slate-600">{caseData.opposingPartyPosition || 'Not specified'}</p>
+                                </div>
+                            </div>
+
+                            {/* Court Information */}
+                            <div className="mt-6 pt-6 border-t grid gap-4 md:grid-cols-3 text-sm">
+                                <div>
+                                    <span className="font-semibold text-slate-900 block">Jurisdiction</span>
+                                    <span className="text-slate-600 capitalize">{caseData.jurisdiction || '-'}</span>
+                                </div>
+                                <div>
+                                    <span className="font-semibold text-slate-900 block">Court Name</span>
+                                    <span className="text-slate-600">{caseData.courtName || '-'}</span>
+                                </div>
+                                <div>
+                                    <span className="font-semibold text-slate-900 block">Judge</span>
+                                    <span className="text-slate-600">{caseData.judgeName || '-'}</span>
+                                </div>
+                                <div>
+                                    <span className="font-semibold text-slate-900 block">Docket #</span>
+                                    <span className="text-slate-600">{caseData.docketNumber || '-'}</span>
+                                </div>
+                                <div>
+                                    <span className="font-semibold text-slate-900 block">Department</span>
+                                    <span className="text-slate-600">{caseData.department || '-'}</span>
+                                </div>
+                                <div>
+                                    <span className="font-semibold text-slate-900 block">Venue</span>
+                                    <span className="text-slate-600">{caseData.venue || '-'}</span>
                                 </div>
                             </div>
                         </CardContent>
@@ -173,7 +228,18 @@ export default function CaseDetailPage({ params }: { params: { id: string } }) {
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold">{partyCount}</div>
-                                <p className="text-xs text-muted-foreground">Total Parties Involved</p>
+                                <p className="text-xs text-muted-foreground mb-4">Total Parties Involved</p>
+
+                                {caseData.opposingPartyName && (
+                                    <div className="text-sm border-t pt-2 mt-2">
+                                        <div className="font-semibold">Opposing: {caseData.opposingPartyName}</div>
+                                        {caseData.opposingCounselName && (
+                                            <div className="text-xs text-slate-500 mt-1">
+                                                Counsel: {caseData.opposingCounselName}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
 

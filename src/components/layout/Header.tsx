@@ -12,7 +12,7 @@ export function Header() {
     const { user } = useAuth()
 
     return (
-        <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-white px-6">
+        <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-white px-6 print:hidden">
             {/* Search */}
             <div className="flex-1">
                 <div className="relative w-full max-w-md">
