@@ -16,6 +16,9 @@ export interface Draft {
     templateId?: string
     templateName?: string
     documentType?: string
+    documentTypeId?: string
+    documentCategoryId?: string
+    userInstructions?: string
     caseType?: string
 }
 
