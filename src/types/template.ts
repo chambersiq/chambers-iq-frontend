@@ -19,16 +19,13 @@ export interface Template {
     name: string
     description: string
     content: string // HTML or Markdown
-    category: string
     variables: TemplateVariable[]
-    documentType?: string
-    caseType?: string
     isSystem: boolean // System templates cannot be deleted
 
-    // Phase 2: Categorization
-    documentTypeId?: string
-    courtLevelId?: string
-    caseTypeId?: string
+    // Required Indian Law Categorization (Phase 2)
+    documentTypeId: string
+    courtLevelId: string
+    caseTypeId: string
     allowedCourtLevels?: string[]
     allowedCaseTypes?: string[]
     createdAt: string

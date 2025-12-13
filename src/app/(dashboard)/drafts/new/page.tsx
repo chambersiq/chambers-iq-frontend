@@ -14,6 +14,7 @@ import { useClients } from '@/hooks/api/useClients'
 import { useCases, useCase } from '@/hooks/api/useCases'
 import { useTemplates, useTemplate } from '@/hooks/api/useTemplates'
 import { useCreateDraft } from '@/hooks/api/useDrafts'
+import { useMasterData } from '@/contexts/MasterDataContext'
 import { toast } from 'sonner'
 import api from '@/lib/api' // Direct API access for one-off fetches if needed, or better use queryClient/hooks
 
@@ -36,6 +37,7 @@ export default function NewDraftPage() {
     const { data: clients = [] } = useClients(companyId)
     const { data: cases = [], isLoading: isLoadingCases } = useCases(companyId, clientId)
     const { data: templates = [] } = useTemplates(companyId)
+    const { data: masterData } = useMasterData()
     const createDraft = useCreateDraft(companyId)
 
     // DEBUGGING
@@ -54,8 +56,13 @@ export default function NewDraftPage() {
     // Filter templates based on docType
     const filteredTemplates = templates.filter(t => {
         if (!docType) return true
+        // Find the corresponding document type ID from DOCUMENT_TYPES
         const selectedType = DOCUMENT_TYPES.find(d => d.value === docType)
-        if (selectedType) return t.category === selectedType.category
+        if (selectedType) {
+            // Find the master data document type that matches the category
+            const masterDocType = masterData?.document_types.find(dt => dt.name.toLowerCase().includes(selectedType.category.toLowerCase()))
+            return t.documentTypeId === masterDocType?.id
+        }
         return true
     })
 

@@ -12,8 +12,7 @@ import { useCreateTemplate, useGetWorkflowStatus, useReviewWorkflow } from '@/ho
 import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
-import { TemplateCategory } from '@/types/template'
-import { DOCUMENT_TYPES } from '@/lib/constants'
+import { useMasterData } from '@/contexts/MasterDataContext'
 import {
     Select,
     SelectContent,
@@ -33,8 +32,12 @@ function NewTemplateContent() {
 
     const [name, setName] = useState('')
     const [description, setDescription] = useState('')
-    const [category, setCategory] = useState<TemplateCategory>('other')
+    const [documentTypeId, setDocumentTypeId] = useState('')
+    const [courtLevelId, setCourtLevelId] = useState('')
+    const [caseTypeId, setCaseTypeId] = useState('')
     const [templateContent, setTemplateContent] = useState('')
+
+    const { data: masterData } = useMasterData()
 
     const threadId = searchParams.get('thread_id')
     const { data: workflowStatus } = useGetWorkflowStatus(threadId)
@@ -159,14 +162,20 @@ function NewTemplateContent() {
             toast.error("Template content is empty")
             return
         }
+        if (!documentTypeId || !courtLevelId || !caseTypeId) {
+            toast.error("Please select document type, court level, and case type")
+            return
+        }
 
         createTemplate.mutate({
             name,
             description,
-            category,
             content: templateContent,
             variables: [], // TODO: Extract variables from content
             isSystem: false,
+            documentTypeId,
+            courtLevelId,
+            caseTypeId,
             createdBy: user?.fullName || user?.email || 'Unknown User'
         }, {
             onSuccess: () => {
@@ -218,20 +227,50 @@ function NewTemplateContent() {
                             onChange={(e) => setName(e.target.value)}
                         />
                         <div className="flex items-center gap-2">
-                            <Select value={category} onValueChange={(v) => setCategory(v as TemplateCategory)}>
-                                <SelectTrigger className="w-[150px] h-8 text-xs">
-                                    <SelectValue placeholder="Category" />
+                            {/* Document Type */}
+                            <Select value={documentTypeId} onValueChange={setDocumentTypeId}>
+                                <SelectTrigger className="w-[140px] h-8 text-xs">
+                                    <SelectValue placeholder="Document Type" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {DOCUMENT_TYPES.map(type => (
-                                        <SelectItem key={type.value} value={type.category}>
-                                            {type.label}
+                                    {masterData?.document_types.map((dt) => (
+                                        <SelectItem key={dt.id} value={dt.id}>
+                                            {dt.name}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
+
+                            {/* Court Level */}
+                            <Select value={courtLevelId} onValueChange={setCourtLevelId}>
+                                <SelectTrigger className="w-[120px] h-8 text-xs">
+                                    <SelectValue placeholder="Court Level" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {masterData?.court_levels.map((cl) => (
+                                        <SelectItem key={cl.id} value={cl.id}>
+                                            {cl.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+
+                            {/* Case Type */}
+                            <Select value={caseTypeId} onValueChange={setCaseTypeId}>
+                                <SelectTrigger className="w-[120px] h-8 text-xs">
+                                    <SelectValue placeholder="Case Type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {masterData?.case_types.map((ct) => (
+                                        <SelectItem key={ct.id} value={ct.id}>
+                                            {ct.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+
                             <Input
-                                className="h-8 text-xs w-[300px]"
+                                className="h-8 text-xs w-[200px]"
                                 placeholder="Description (optional)"
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}

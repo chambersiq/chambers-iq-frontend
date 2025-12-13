@@ -158,16 +158,17 @@ export function TemplateList() {
                         <TableRow>
                             <TableHead>Name</TableHead>
                             <TableHead>Document Type</TableHead>
-                            <TableHead className="w-[300px]">Description</TableHead>
+                            <TableHead>Court Level</TableHead>
+                            <TableHead>Case Type</TableHead>
+                            <TableHead className="w-[200px]">Description</TableHead>
                             <TableHead>Last Updated</TableHead>
-                            <TableHead>Created By</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {filteredTemplates.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={6} className="h-24 text-center">
+                                <TableCell colSpan={7} className="h-24 text-center">
                                     No templates found.
                                 </TableCell>
                             </TableRow>
@@ -191,14 +192,29 @@ export function TemplateList() {
                                             <span className="text-muted-foreground">-</span>
                                         )}
                                     </TableCell>
+                                    <TableCell>
+                                        {t.courtLevelId ? (
+                                            <Badge variant="secondary">
+                                                {masterData?.court_levels.find(cl => cl.id === t.courtLevelId)?.name || t.courtLevelId}
+                                            </Badge>
+                                        ) : (
+                                            <span className="text-muted-foreground">-</span>
+                                        )}
+                                    </TableCell>
+                                    <TableCell>
+                                        {t.caseTypeId ? (
+                                            <Badge variant="secondary">
+                                                {masterData?.case_types.find(ct => ct.id === t.caseTypeId)?.name || t.caseTypeId}
+                                            </Badge>
+                                        ) : (
+                                            <span className="text-muted-foreground">-</span>
+                                        )}
+                                    </TableCell>
                                     <TableCell className="text-sm">
                                         <DescriptionCell description={t.description} />
                                     </TableCell>
                                     <TableCell className="text-sm text-muted-foreground">
                                         {formatDate(t.updatedAt)}
-                                    </TableCell>
-                                    <TableCell className="text-sm">
-                                        {t.isSystem ? <Badge variant="secondary">System</Badge> : t.createdBy}
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <DropdownMenu>
