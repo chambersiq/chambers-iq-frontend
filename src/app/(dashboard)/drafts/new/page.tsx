@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ArrowLeft, Sparkles, Loader2 } from 'lucide-react'
 import Link from 'next/link'
@@ -31,6 +33,8 @@ export default function NewDraftPage() {
     const [docName, setDocName] = useState('')
     const [docType, setDocType] = useState<string>('') // 'contract' | 'pleading' | ...
     const [templateId, setTemplateId] = useState<string>('blank')
+    const [creationMode, setCreationMode] = useState<'template' | 'ai'>('template')
+    const [aiPrompt, setAiPrompt] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     // Data Hooks
@@ -97,7 +101,9 @@ DATE: ${new Date().toLocaleDateString()}
             initialContent += header
 
             // 2. Fetch Template Content if selected
-            if (templateId !== 'blank') {
+            if (creationMode === 'ai') {
+                initialContent += `AI INSTRUCTIONS:\n${aiPrompt}\n\n(Note: The AI Agent will process these instructions in the next step of the workflow. For now, they are saved here.)\n\n`
+            } else if (templateId !== 'blank') {
                 try {
                     // Manual fetch for template content to avoid hook rules issues or waiting
                     const { data: templateData } = await api.get(`/templates/${templateId}`)
@@ -119,7 +125,7 @@ DATE: ${new Date().toLocaleDateString()}
                     content: initialContent,
                     status: 'draft',
                     clientId: clientId, // Backend should handle this or we send it
-                    templateId: templateId !== 'blank' ? templateId : undefined,
+                    templateId: (creationMode === 'template' && templateId !== 'blank') ? templateId : undefined,
                     documentType: DOCUMENT_TYPES.find(d => d.value === docType)?.label || docType
                 }
             })
@@ -227,23 +233,61 @@ DATE: ${new Date().toLocaleDateString()}
                             </Select>
                         </div>
 
-                        {/* Template Selection */}
-                        <div className="space-y-2">
-                            <Label>Starting Point</Label>
-                            <Select value={templateId} onValueChange={setTemplateId}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select template..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="blank">Blank Document</SelectItem>
-                                    {filteredTemplates.map(t => (
-                                        <SelectItem key={t.templateId} value={t.templateId}>
-                                            {t.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                        {/* Drafting Method Selection */}
+                        <div className="space-y-3">
+                            <Label>Drafting Method</Label>
+                            <RadioGroup
+                                defaultValue="template"
+                                value={creationMode}
+                                onValueChange={(v) => setCreationMode(v as 'template' | 'ai')}
+                                className="flex gap-4"
+                            >
+                                <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-slate-50 transition-colors w-1/2">
+                                    <RadioGroupItem value="template" id="mode-template" />
+                                    <Label htmlFor="mode-template" className="cursor-pointer font-normal">From Template</Label>
+                                </div>
+                                <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-slate-50 transition-colors w-1/2">
+                                    <RadioGroupItem value="ai" id="mode-ai" />
+                                    <Label htmlFor="mode-ai" className="cursor-pointer font-normal">AI Instructions</Label>
+                                </div>
+                            </RadioGroup>
                         </div>
+
+                        {/* Template Selection */}
+                        {creationMode === 'template' && (
+                            <div className="space-y-2 animate-in fade-in zoom-in-95 duration-200">
+                                <Label>Select Template</Label>
+                                <Select value={templateId} onValueChange={setTemplateId}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select template..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="blank">Blank Document</SelectItem>
+                                        {filteredTemplates.map(t => (
+                                            <SelectItem key={t.templateId} value={t.templateId}>
+                                                {t.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
+                        {/* AI Instructions Input */}
+                        {creationMode === 'ai' && (
+                            <div className="space-y-2 animate-in fade-in zoom-in-95 duration-200">
+                                <Label>AI Instructions <span className="text-red-500">*</span></Label>
+                                <Textarea
+                                    placeholder="Describe what you want to draft (e.g., 'Draft a detailed Motion to Dismiss focusing on lack of jurisdiction...')"
+                                    className="min-h-[120px]"
+                                    value={aiPrompt}
+                                    onChange={(e) => setAiPrompt(e.target.value)}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Your instructions will be used to initialize the draft.
+                                </p>
+                            </div>
+                        )}
 
                         <div className="flex justify-end gap-4 pt-4">
                             <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}>
