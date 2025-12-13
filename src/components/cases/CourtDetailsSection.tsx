@@ -45,7 +45,14 @@ export function CourtDetailsSection() {
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2">
-
+                    <div className="space-y-2">
+                        <Label htmlFor="jurisdiction">Jurisdiction (Legacy)</Label>
+                        <Input
+                            id="jurisdiction"
+                            placeholder="e.g. Delhi, Mumbai, Karnataka"
+                            {...register('jurisdiction')}
+                        />
+                    </div>
                     <div className="space-y-2">
                         <Label htmlFor="courtName">Court Name</Label>
                         <Input

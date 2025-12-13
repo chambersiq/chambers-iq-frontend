@@ -36,15 +36,7 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
     const createCase = useCreateCase(companyId)
     const updateCase = useUpdateCase(companyId)
 
-    const normType = (t?: string) => {
-        if (!t) return undefined;
-        const lower = t.toLowerCase();
-        // Common legacy mappings
-        if (lower === 'civil') return 'civil-litigation';
-        if (lower === 'criminal') return 'criminal-defense';
-        if (lower === 'family') return 'family-law';
-        return lower;
-    }
+
 
     const normPri = (p?: string) => p?.toLowerCase();
 
@@ -67,7 +59,7 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
             caseNumber: initialData?.caseNumber || '',
             clientId: initialData?.clientId || '',
             status: normLower(initialData?.status) as any || 'draft',
-            caseType: normType(initialData?.caseType),
+
             priority: normPri(initialData?.priority) as any || 'medium',
             feeArrangement: normFee(initialData?.feeArrangement),
             caseSummary: initialData?.caseSummary || '',
@@ -249,7 +241,7 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
                                 )}
                             />
                         </div>
-                        {/* Legacy Case Category Removed */}
+
 
                         {/* Phase 2: Indian Law Categorization */}
                         {masterData && (
@@ -281,6 +273,7 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
                                     <Controller
                                         control={methods.control}
                                         name="caseTypeId"
+                                        rules={{ required: "Specific Case Type is required" }}
                                         render={({ field }) => {
                                             const selectedArea = watch('practiceArea');
                                             const types = masterData.case_types.filter(ct => !selectedArea || ct.practice_area === selectedArea);

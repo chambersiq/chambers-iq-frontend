@@ -24,6 +24,7 @@ import {
 import { useAuth } from '@/hooks/useAuth'
 import { useCase } from '@/hooks/api/useCases'
 import { formatCurrency, formatDate } from '@/lib/utils'
+import { useMasterData } from '@/contexts/MasterDataContext'
 
 export default function CaseDetailPage({ params }: { params: { id: string } }) {
     const searchParams = useSearchParams()
@@ -31,6 +32,7 @@ export default function CaseDetailPage({ params }: { params: { id: string } }) {
     const { user } = useAuth()
     const companyId = user?.companyId || ''
     const [showUploadPrompt, setShowUploadPrompt] = useState(false)
+    const { data: masterData } = useMasterData()
 
     const { data: caseData, isLoading } = useCase(companyId, params.id)
 
@@ -101,7 +103,9 @@ export default function CaseDetailPage({ params }: { params: { id: string } }) {
                         <Badge variant={caseData.status === 'active' ? 'default' : 'secondary'} className="capitalize">
                             {caseData.status}
                         </Badge>
-                        <Badge variant="outline" className="capitalize">{(caseData.caseType || (caseData as any).caseTypeId || 'General').replace(/-/g, ' ')}</Badge>
+                        <Badge variant="outline" className="capitalize">
+                            {masterData?.case_types.find(t => t.id === caseData.caseTypeId)?.name || caseData.caseSubType || 'General'}
+                        </Badge>
                     </div>
                     <p className="mt-2 text-slate-600">Case #{caseData.caseNumber} • Client: {caseData.clientName}</p>
                 </div>

@@ -35,6 +35,7 @@ import { useSearchParams } from 'next/navigation'
 import { useCases, useDeleteCase } from '@/hooks/api/useCases'
 import { useAuth } from '@/hooks/useAuth'
 import { useClients } from '@/hooks/api/useClients'
+import { useMasterData } from '@/contexts/MasterDataContext'
 import {
     AlertDialog,
     AlertDialogAction,
@@ -82,6 +83,7 @@ export function CaseList() {
 
     const { data: cases = [], isLoading } = useCases(companyId, clientFilter === 'all' ? undefined : clientFilter)
     const { data: clients = [] } = useClients(companyId)
+    const { data: masterData } = useMasterData()
     const deleteCase = useDeleteCase(companyId)
 
     const handleDelete = () => {
@@ -208,7 +210,7 @@ export function CaseList() {
                                     </TableCell>
                                     <TableCell>{c.clientName}</TableCell>
                                     <TableCell className="capitalize">
-                                        {(c.caseType || c.caseSubType || 'General').replace('-', ' ')}
+                                        {masterData ? (masterData.case_types.find(t => t.id === c.caseTypeId)?.name || c.caseSubType || 'General') : (c.caseSubType || 'General')}
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant={PRIORITY_COLORS[c.priority] as any} className="capitalize">

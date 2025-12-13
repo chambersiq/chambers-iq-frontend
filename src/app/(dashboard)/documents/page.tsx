@@ -17,12 +17,14 @@ import {
 import { useCases } from '@/hooks/api/useCases'
 import { useClients } from '@/hooks/api/useClients'
 import { useAuth } from '@/hooks/useAuth'
+import { useMasterData } from '@/contexts/MasterDataContext'
 
 export default function DocumentsPage() {
     const { user } = useAuth()
     const companyId = user?.companyId || ''
     const { data: cases = [], isLoading: isLoadingCases } = useCases(companyId)
     const { data: clients = [], isLoading: isLoadingClients } = useClients(companyId)
+    const { data: masterData } = useMasterData()
 
     const [searchQuery, setSearchQuery] = useState('')
     const [selectedClient, setSelectedClient] = useState<string>('all')
@@ -131,7 +133,7 @@ export default function DocumentsPage() {
                                     {/* Type */}
                                     <div className="md:col-span-3 hidden md:block">
                                         <Badge variant="outline" className="font-normal capitalize bg-slate-50">
-                                            {(caseItem.caseType || (caseItem.caseTypeId || 'General')).replace(/_/g, ' ').replace(/-/g, ' ')}
+                                            {masterData?.case_types.find(t => t.id === caseItem.caseTypeId)?.name || caseItem.caseSubType || 'General'}
                                         </Badge>
                                     </div>
 

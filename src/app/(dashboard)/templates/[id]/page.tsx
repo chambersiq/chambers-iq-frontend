@@ -68,7 +68,6 @@ export default function EditTemplatePage({ params }: { params: { id: string } })
                 caseTypeId
             })
             toast.success("Template saved successfully")
-            router.push('/templates')
         } catch (err) {
             console.error(err)
             toast.error("Failed to save template")

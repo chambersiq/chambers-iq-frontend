@@ -38,20 +38,24 @@ export interface Document {
     tags?: string[]
     description?: string
 
-    // Phase 2: Categorization
-    documentTypeId?: string
-    documentCategoryId?: string
-    courtLevelId?: string
-    status?: string
-    parentCaseTypeId?: string
+    // Required: Indian Law Categorization (Phase 2)
+    documentTypeId: string
+    documentCategoryId: string
+    courtLevelId: string
+    status: string
+    parentCaseTypeId: string
 }
 
 export interface DocumentCreate {
     caseId: string
     name: string
-    type: DocumentType
     fileSize: number
     mimeType: string
     description?: string
     generateSummary?: boolean
+    // Required: Indian Law Categorization
+    documentTypeId: string
+    documentCategoryId: string
+    courtLevelId: string
+    parentCaseTypeId: string
 }

@@ -6,8 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Textarea } from '@/components/ui/textarea'
 import { ArrowLeft, Sparkles, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -18,22 +16,20 @@ import { useTemplates, useTemplate } from '@/hooks/api/useTemplates'
 import { useCreateDraft } from '@/hooks/api/useDrafts'
 import { toast } from 'sonner'
 import api from '@/lib/api' // Direct API access for one-off fetches if needed, or better use queryClient/hooks
-import { useMasterData } from '@/contexts/MasterDataContext'
+
+import { DOCUMENT_TYPES } from '@/lib/constants'
 
 export default function NewDraftPage() {
     const router = useRouter()
     const { user } = useAuth()
     const companyId = user?.companyId || ''
-    const { data: masterData } = useMasterData()
 
     // State
     const [clientId, setClientId] = useState<string>('')
     const [caseId, setCaseId] = useState<string>('')
     const [docName, setDocName] = useState('')
-    const [documentTypeId, setDocumentTypeId] = useState<string>('')
+    const [docType, setDocType] = useState<string>('') // 'contract' | 'pleading' | ...
     const [templateId, setTemplateId] = useState<string>('blank')
-    const [startingPoint, setStartingPoint] = useState<'template' | 'scratch'>('template')
-    const [userInstructions, setUserInstructions] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     // Data Hooks
@@ -50,21 +46,17 @@ export default function NewDraftPage() {
         casesCount: cases.length,
         isCasesLoading: isLoadingCases
     })
+    if (clients.length > 0) console.log('[NewDraftPage] Sample Client:', clients[0])
 
-    // Filter templates based on documentTypeId
-    // Templates also have documentTypeId now.
-    // If template has NO documentTypeId (legacy), maybe we can't filter easily, or we default to showing all?
-    // Let's filter: Show templates matching documentTypeId OR generic templates
+
+
+
+    // Filter templates based on docType
     const filteredTemplates = templates.filter(t => {
-        if (!documentTypeId) return true
-
-        // Exact match on new field
-        if (t.documentTypeId === documentTypeId) return true
-
-        // Also include templates linked to 'General' or blank if user hasn't selected a type? 
-        // No, if user selected a type, we usually want specific templates.
-
-        return false
+        if (!docType) return true
+        const selectedType = DOCUMENT_TYPES.find(d => d.value === docType)
+        if (selectedType) return t.category === selectedType.category
+        return true
     })
 
     const handleCreate = async (e: React.FormEvent) => {
@@ -80,6 +72,10 @@ export default function NewDraftPage() {
             let initialContent = ''
 
             // 1. Fetch Case Details for Context
+            // We can't use useCase hook here conditionally easily, so we might need to fetch manually or rely on list data if sufficient.
+            // List data `cases` has basic info. For full details we might need a fetch.
+            // For MVP, constructing header from Case Name/Client Name is good start.
+
             const selectedCase = cases.find(c => c.caseId === caseId)
             const selectedClient = clients.find(c => c.clientId === clientId)
             const clientName = selectedClient
@@ -117,8 +113,7 @@ DATE: ${new Date().toLocaleDateString()}
                     status: 'draft',
                     clientId: clientId, // Backend should handle this or we send it
                     templateId: templateId !== 'blank' ? templateId : undefined,
-                    documentTypeId: documentTypeId || undefined, // Clean empty string
-                    userInstructions: startingPoint === 'scratch' ? userInstructions : undefined
+                    documentType: DOCUMENT_TYPES.find(d => d.value === docType)?.label || docType
                 }
             })
 
@@ -209,85 +204,39 @@ DATE: ${new Date().toLocaleDateString()}
                         </div>
 
                         {/* Document Type (Filters Templates) */}
-                        {masterData && (
-                            <div className="space-y-2">
-                                <Label>Document Type</Label>
-                                <Select value={documentTypeId} onValueChange={(val) => { setDocumentTypeId(val); setTemplateId('blank'); }}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select type..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {masterData.document_types.map(type => (
-                                            <SelectItem key={type.id} value={type.id}>
-                                                {type.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        )}
-
-                        {/* Starting Point Selection */}
-                        <div className="space-y-4">
-                            <Label>Starting Point</Label>
-                            <RadioGroup value={startingPoint} onValueChange={(val: 'template' | 'scratch') => {
-                                setStartingPoint(val)
-                                if (val === 'scratch') setTemplateId('blank')
-                            }} className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <RadioGroupItem value="template" id="sp-template" className="peer sr-only" />
-                                    <Label
-                                        htmlFor="sp-template"
-                                        className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
-                                    >
-                                        <div className="mb-2 text-2xl">📄</div>
-                                        <div className="font-semibold">Use Template</div>
-                                    </Label>
-                                </div>
-                                <div>
-                                    <RadioGroupItem value="scratch" id="sp-scratch" className="peer sr-only" />
-                                    <Label
-                                        htmlFor="sp-scratch"
-                                        className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
-                                    >
-                                        <div className="mb-2 text-2xl">⚡️</div>
-                                        <div className="font-semibold">Start from Scratch</div>
-                                    </Label>
-                                </div>
-                            </RadioGroup>
+                        <div className="space-y-2">
+                            <Label>Document Type</Label>
+                            <Select value={docType} onValueChange={(val) => { setDocType(val); setTemplateId('blank'); }}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select type..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {DOCUMENT_TYPES.map(type => (
+                                        <SelectItem key={type.value} value={type.value}>
+                                            {type.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
 
-                        {/* Conditional Inputs based on Starting Point */}
-                        {startingPoint === 'template' ? (
-                            <div className="space-y-2">
-                                <Label>Select Template</Label>
-                                <Select value={templateId} onValueChange={setTemplateId}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select template..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {filteredTemplates.map(t => (
-                                            <SelectItem key={t.templateId} value={t.templateId}>
-                                                {t.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        ) : (
-                            <div className="space-y-2">
-                                <Label>Brief / Instructions (Optional)</Label>
-                                <Textarea
-                                    placeholder="Briefly describe what you want to draft. The AI will use this to help you get started."
-                                    value={userInstructions}
-                                    onChange={(e) => setUserInstructions(e.target.value)}
-                                    className="resize-none h-32"
-                                />
-                                <p className="text-xs text-muted-foreground">
-                                    Provide key points, specific clauses, or tone instructions.
-                                </p>
-                            </div>
-                        )}
+                        {/* Template Selection */}
+                        <div className="space-y-2">
+                            <Label>Starting Point</Label>
+                            <Select value={templateId} onValueChange={setTemplateId}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select template..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="blank">Blank Document</SelectItem>
+                                    {filteredTemplates.map(t => (
+                                        <SelectItem key={t.templateId} value={t.templateId}>
+                                            {t.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
                         <div className="flex justify-end gap-4 pt-4">
                             <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}>

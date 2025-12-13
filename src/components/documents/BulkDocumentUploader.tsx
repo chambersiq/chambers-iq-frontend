@@ -12,24 +12,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Upload, X, FileText, Sparkles, Plus, Trash2, Filter } from 'lucide-react'
 import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
-import { DocumentType } from '@/types/document'
 import { useMasterData } from '@/contexts/MasterDataContext'
-
-// Helper to map Category Name/ID to DocumentType
-const getGenericTypeFromCategory = (categoryId: string, categories: any[]): DocumentType => {
-    const cat = categories.find(c => c.id === categoryId);
-    if (!cat) return 'other';
-    const name = cat.name.toLowerCase();
-
-    if (name.includes('pleading')) return 'pleading';
-    if (name.includes('application') || name.includes('motion')) return 'motion';
-    if (name.includes('evidence')) return 'evidence';
-    if (name.includes('contract') || name.includes('agreement')) return 'contract';
-    if (name.includes('notice') || name.includes('correspondence')) return 'correspondence';
-    if (name.includes('order') || name.includes('judgment')) return 'order';
-
-    return 'other';
-}
+import { useCase } from '@/hooks/api/useCases'
 import { useRouter } from 'next/navigation'
 import { useCreateDocumentUrl } from '@/hooks/api/useDocuments'
 import { useAuth } from '@/hooks/useAuth'
@@ -42,12 +26,14 @@ interface QueueItem {
     id: string
     file: File
     title: string
-    type: DocumentType
+    documentTypeId: string
+    documentCategoryId: string
+    courtLevelId: string
+    parentCaseTypeId: string
     summary: string
     aiGenerate: boolean
     progress: number
-    caseId?: string
-    documentTypeId?: string
+    caseId?: string // Store targeted caseId per item if needed, though we use global selection for now
 }
 
 interface BulkDocumentUploaderProps {
@@ -85,17 +71,27 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
         ? cases.filter((c: any) => c.clientId === selectedClientId)
         : [];
 
-    const { data: masterData } = useMasterData()
-
-    // Form State
+    // Form State - Required Indian Law Categorization
     const [title, setTitle] = useState('')
-    const [type, setType] = useState<DocumentType>('motion')
-    const [documentTypeId, setDocumentTypeId] = useState<string>('')
+    const [documentTypeId, setDocumentTypeId] = useState('')
     const [summary, setSummary] = useState('')
     const [aiGenerate, setAiGenerate] = useState(false)
     const [selectedFiles, setSelectedFiles] = useState<File[]>([])
     const [dragActive, setDragActive] = useState(false)
+    const [showValidation, setShowValidation] = useState(false) // Only show errors after submit attempt
     const inputRef = useRef<HTMLInputElement>(null)
+
+    // Get case data to populate required fields
+    const { data: caseData } = useCase(companyId, selectedCaseId || caseId || '')
+    const { data: masterData } = useMasterData()
+
+    // Auto-populate required fields based on case
+    useEffect(() => {
+        if (caseData && masterData && !documentTypeId) {
+            // Could set a default document type, but let user choose
+            // For now, just ensure the fields are available
+        }
+    }, [caseData, masterData, documentTypeId])
 
     const handleDrag = (e: React.DragEvent) => {
         e.preventDefault()
@@ -132,34 +128,42 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
     }
 
     const addToQueue = () => {
-        if (selectedFiles.length === 0 || !title) return
+        // Show validation errors only after user attempts to submit
+        setShowValidation(true)
 
-        // Validation: Require Case Selection
-        if (!selectedCaseId && !caseId) {
-            // Ideally assume UI handles this, but good to block
+        if (selectedFiles.length === 0 || !title || !documentTypeId || !caseData) return
+
+        // Validation: Require document type selection
+        if (!documentTypeId) {
             return
         }
+
+        // Get document type details from master data
+        const selectedDocType = masterData?.document_types.find(dt => dt.id === documentTypeId)
+        if (!selectedDocType) return
 
         const newItems: QueueItem[] = selectedFiles.map((file, index) => ({
             id: Math.random().toString(36).substring(7),
             file: file,
-            // If multiple files, maybe append index or keep same title? 
-            // Let's keep same title for now, user can edit in queue if needed (future feature)
             title: selectedFiles.length > 1 ? `${title} (${index + 1})` : title,
-            type,
+            documentTypeId: documentTypeId,
+            documentCategoryId: selectedDocType.category_id,
+            courtLevelId: caseData.courtLevelId || 'CL_DC', // Default to district court
+            parentCaseTypeId: caseData.caseTypeId || '',
             summary,
             aiGenerate,
-            progress: 0,
-            documentTypeId: documentTypeId === 'other' ? undefined : documentTypeId // Don't send 'other' as an ID
+            progress: 0
         }))
 
         setQueue(prev => [...prev, ...newItems])
 
-        // Reset Form
+        // Reset Form and validation state
         setTitle('')
+        setDocumentTypeId('')
         setSummary('')
         setSelectedFiles([])
         setAiGenerate(false)
+        setShowValidation(false) // Hide validation errors after successful addition
         if (inputRef.current) inputRef.current.value = ''
     }
 
@@ -181,14 +185,15 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
                 const { document, uploadUrl } = await createDocumentUrl.mutateAsync({
                     caseId: selectedCaseId,
                     name: item.file.name,
-                    type: item.type,
-                    // Pass documentTypeId if available
-                    ...(item.documentTypeId ? { documentTypeId: item.documentTypeId } : {}),
                     fileSize: item.file.size,
                     mimeType: item.file.type,
                     description: item.summary,
-                    generateSummary: item.aiGenerate
-                } as any) // Cast as any because hook type might not be updated yet with documentTypeId optional
+                    generateSummary: item.aiGenerate,
+                    documentTypeId: item.documentTypeId,
+                    documentCategoryId: item.documentCategoryId,
+                    courtLevelId: item.courtLevelId,
+                    parentCaseTypeId: item.parentCaseTypeId
+                })
 
                 // 2. Upload to S3
                 await fetch(uploadUrl, {
@@ -302,67 +307,24 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <Label>Document Type <span className="text-red-500">*</span></Label>
-                                {(() => {
-                                    // 1. Find Current Case
-                                    const currentCase = cases.find((c: any) => c.caseId === (selectedCaseId || caseId));
-                                    // 2. Get Allowed Doc Types
-                                    let validDocTypes = masterData?.document_types || [];
-
-                                    if (currentCase?.caseTypeId && masterData) {
-                                        const ct = masterData.case_types.find(ct => ct.id === currentCase.caseTypeId);
-                                        if (ct && ct.allowed_doc_types && ct.allowed_doc_types.length > 0) {
-                                            validDocTypes = validDocTypes.filter(dt =>
-                                                ct.allowed_doc_types.includes(dt.id) || dt.id === 'DT_034' // Always include 'Other'
-                                            );
-                                        }
-                                    }
-
-                                    // 3. Group by Category
-                                    const grouped = validDocTypes.reduce((acc, dt) => {
-                                        const cat = masterData?.document_categories.find(c => c.id === dt.category_id);
-                                        const catName = cat?.name || 'Other';
-                                        if (!acc[catName]) acc[catName] = [];
-                                        acc[catName].push(dt);
-                                        return acc;
-                                    }, {} as Record<string, typeof validDocTypes>);
-
-                                    return (
-                                        <Select
-                                            value={documentTypeId}
-                                            onValueChange={(val) => {
-                                                setDocumentTypeId(val);
-                                                if (val === 'other') {
-                                                    setType('other');
-                                                } else {
-                                                    // Auto-set generic type
-                                                    const dt = masterData?.document_types.find(d => d.id === val);
-                                                    if (dt && masterData) {
-                                                        setType(getGenericTypeFromCategory(dt.category_id, masterData.document_categories));
-                                                    }
-                                                }
-                                            }}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select specific document type" />
-                                            </SelectTrigger>
-                                            <SelectContent className="max-h-[300px]">
-                                                {Object.entries(grouped).map(([category, types]) => (
-                                                    <div key={category}>
-                                                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-slate-50 sticky top-0">
-                                                            {category}
-                                                        </div>
-                                                        {types.map(dt => (
-                                                            <SelectItem key={dt.id} value={dt.id}>
-                                                                {dt.name}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </div>
-                                                ))}
-
-                                            </SelectContent>
-                                        </Select>
-                                    );
-                                })()}
+                                <Select
+                                    value={documentTypeId}
+                                    onValueChange={setDocumentTypeId}
+                                >
+                                    <SelectTrigger className={!documentTypeId ? "border-red-500" : ""}>
+                                        <SelectValue placeholder="Select document type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {masterData?.document_types.map((dt) => (
+                                            <SelectItem key={dt.id} value={dt.id}>
+                                                {dt.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {showValidation && !documentTypeId && (
+                                    <p className="text-xs text-red-600">Document type is required</p>
+                                )}
                             </div>
 
                             <div className="space-y-2">
@@ -503,8 +465,8 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
                                                 <div>
                                                     <h4 className="font-semibold text-slate-900 truncate">{item.title}</h4>
                                                     <div className="flex items-center gap-2 mt-1">
-                                                        <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-800 capitalize">
-                                                            {item.type}
+                                                        <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-800">
+                                                            {masterData?.document_types.find(dt => dt.id === item.documentTypeId)?.name || item.documentTypeId}
                                                         </span>
                                                         <span className="text-xs text-slate-500">
                                                             {item.file.name} ({(item.file.size / 1024 / 1024).toFixed(2)} MB)
@@ -557,6 +519,6 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
                     </div>
                 )}
             </div>
-        </div >
+        </div>
     )
 }

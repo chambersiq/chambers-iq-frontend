@@ -7,11 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Plus, Trash2 } from 'lucide-react'
 import { useFormContext, useFieldArray, Controller } from 'react-hook-form'
-import { useMasterData } from '@/contexts/MasterDataContext'
 
 export function PartiesSection() {
-    const { register, control } = useFormContext()
-    const { data: masterData } = useMasterData()
+    const { register, control, setValue } = useFormContext()
     const { fields, append, remove } = useFieldArray({
         control,
         name: 'additionalParties'
@@ -44,11 +42,8 @@ export function PartiesSection() {
                                             <SelectValue placeholder="Select type" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {masterData?.party_types?.map((type) => (
-                                                <SelectItem key={type.id} value={type.id}>
-                                                    {type.name}
-                                                </SelectItem>
-                                            ))}
+                                            <SelectItem value="individual">Individual</SelectItem>
+                                            <SelectItem value="company">Company</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 )}
@@ -92,7 +87,7 @@ export function PartiesSection() {
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() => append({ name: '', address: '', type: 'PT_01' })}
+                            onClick={() => append({ name: '', type: 'individual' })}
                         >
                             <Plus className="mr-2 h-4 w-4" /> Add Party
                         </Button>
@@ -109,14 +104,10 @@ export function PartiesSection() {
                             >
                                 <Trash2 className="h-4 w-4" />
                             </Button>
-                            <div className="grid gap-4 md:grid-cols-3 pr-8">
+                            <div className="grid gap-4 md:grid-cols-2 pr-8">
                                 <div className="space-y-2">
                                     <Label>Name</Label>
                                     <Input placeholder="Party Name" {...register(`additionalParties.${index}.name`)} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Address</Label>
-                                    <Input placeholder="Full Address" {...register(`additionalParties.${index}.address`)} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Type</Label>
@@ -129,11 +120,8 @@ export function PartiesSection() {
                                                     <SelectValue placeholder="Select type" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    {masterData?.party_types?.map((type) => (
-                                                        <SelectItem key={type.id} value={type.id}>
-                                                            {type.name}
-                                                        </SelectItem>
-                                                    ))}
+                                                    <SelectItem value="individual">Individual</SelectItem>
+                                                    <SelectItem value="company">Company</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         )}

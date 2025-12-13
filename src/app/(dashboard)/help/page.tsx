@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, ReactNode } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -35,7 +35,14 @@ const CATEGORIES: { id: FAQCategory; label: string; icon: any; desc: string }[] 
     { id: 'account', label: 'Account', icon: Settings, desc: 'Billing, settings' },
 ]
 
-const FAQ_ITEMS = [
+type FAQItem = {
+    id: string
+    category: FAQCategory
+    question: string
+    answer: ReactNode
+}
+
+const FAQ_ITEMS: FAQItem[] = [
     {
         id: 'gs-1',
         category: 'getting-started',

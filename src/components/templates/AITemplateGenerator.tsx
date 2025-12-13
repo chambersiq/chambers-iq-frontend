@@ -10,16 +10,6 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'sonner'
 import { v4 as uuidv4 } from 'uuid'
-import { useMasterData } from '@/contexts/MasterDataContext'
-import { DOCUMENT_TYPES } from '@/lib/constants'
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
-import { TemplateCategory } from '@/types/template'
 
 interface AITemplateGeneratorProps {
     onGenerate: (content: string) => void
@@ -28,7 +18,6 @@ interface AITemplateGeneratorProps {
 export function AITemplateGenerator({ onGenerate }: AITemplateGeneratorProps) {
     const { user } = useAuth()
     const companyId = user?.companyId || ''
-    const { data: masterData } = useMasterData()
 
     // Hooks
     const uploadSample = useUploadTemplateSample(companyId)
@@ -42,13 +31,6 @@ export function AITemplateGenerator({ onGenerate }: AITemplateGeneratorProps) {
     const [isSimulation, setIsSimulation] = useState(false)
     const [isOpen, setIsOpen] = useState(false)
     const [statusMessage, setStatusMessage] = useState('')
-
-    // Categorization State
-    const [category, setCategory] = useState<TemplateCategory>('other')
-    const [documentTypeId, setDocumentTypeId] = useState('')
-    const [courtLevelId, setCourtLevelId] = useState('')
-    const [caseTypeId, setCaseTypeId] = useState('')
-
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,6 +72,10 @@ export function AITemplateGenerator({ onGenerate }: AITemplateGeneratorProps) {
             // Read files content for the agent
             const fileContents = await Promise.all(files.map(file => readFileAsText(file)))
 
+            // Add prompt as a "sample" or context if needed, but for now agent expects samples
+            // We can prepend the prompt to the first sample or send it separately if we update backend
+            // For MVP, valid assumption: Files are samples.
+
             const result = await startWorkflow.mutateAsync({
                 sampleDocs: fileContents,
                 // @ts-ignore - Backend expects snake_case, frontend camelCase/any
@@ -100,25 +86,12 @@ export function AITemplateGenerator({ onGenerate }: AITemplateGeneratorProps) {
             setStatusMessage('Agent started! Redirecting...')
             setIsOpen(false)
 
-            // Construct redirect URL with query params
-            const params = new URLSearchParams()
-            params.set('source', 'ai')
-            params.set('thread_id', result.threadId)
-            if (category) params.set('category', category)
-            if (documentTypeId) params.set('documentTypeId', documentTypeId)
-            if (courtLevelId) params.set('courtLevelId', courtLevelId)
-            if (caseTypeId) params.set('caseTypeId', caseTypeId)
-
-            router.push(`/templates/new?${params.toString()}`)
+            router.push(`/templates/new?source=ai&thread_id=${result.threadId}`)
 
             // Reset
             setPrompt('')
             setFiles([])
             setStatusMessage('')
-            setCategory('other')
-            setDocumentTypeId('')
-            setCourtLevelId('')
-            setCaseTypeId('')
 
         } catch (error) {
             console.error(error)
@@ -138,81 +111,17 @@ export function AITemplateGenerator({ onGenerate }: AITemplateGeneratorProps) {
                     Generate Template with AI
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>
                     <DialogTitle>Generate Template with AI</DialogTitle>
                     <DialogDescription>
-                        Details provided here will categorize your template and help the AI generate relevant content.
+                        Describe the template you want to create and optionally upload sample files (PDF, DOCX) to guide the style.
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4 py-4">
-                    {/* Categorization Fields */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label>Category</Label>
-                            <Select value={category} onValueChange={(v) => setCategory(v as TemplateCategory)}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select Category" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {DOCUMENT_TYPES.map(type => (
-                                        <SelectItem key={type.value} value={type.category}>
-                                            {type.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Document Type</Label>
-                            <Select value={documentTypeId} onValueChange={setDocumentTypeId}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select Type (Optional)" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {masterData?.document_types?.map((dt) => (
-                                        <SelectItem key={dt.id} value={dt.id}>
-                                            {dt.name}
-                                        </SelectItem>
-                                    )) || <div className="p-2 text-xs">Loading...</div>}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Court Level</Label>
-                            <Select value={courtLevelId} onValueChange={setCourtLevelId}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select Court (Optional)" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {masterData?.court_levels?.map((cl) => (
-                                        <SelectItem key={cl.id} value={cl.id}>
-                                            {cl.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Case Type</Label>
-                            <Select value={caseTypeId} onValueChange={setCaseTypeId}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select Case Type (Optional)" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {masterData?.case_types?.map((ct) => (
-                                        <SelectItem key={ct.id} value={ct.id}>
-                                            {ct.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-
                     <div className="space-y-2">
-                        <Label>Instructions / Description</Label>
+                        <Label>Description</Label>
                         <Textarea
                             placeholder="e.g. Create a standard NDA for software development contractors..."
                             className="min-h-[80px]"

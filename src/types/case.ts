@@ -44,7 +44,7 @@ export interface Case {
     caseName: string
     clientId: string
     clientName: string // Denormalized for display
-    caseType: CaseType
+
     caseSubType?: string
     status: CaseStatus
 

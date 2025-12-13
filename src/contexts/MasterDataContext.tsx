@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { MasterData } from '@/types/master-data';
+import api from '@/lib/api';
 
 interface MasterDataContextType {
     data: MasterData | null;
@@ -21,18 +22,16 @@ export function MasterDataProvider({ children }: { children: React.ReactNode }) 
         try {
             setIsLoading(true);
             setError(null);
-            const response = await fetch('/api/master-data');
-            if (!response.ok) {
-                throw new Error(`Failed to fetch master data: ${response.statusText}`);
-            }
-            const jsonData = await response.json();
 
-            // The API returns the structure { seed_data_version, master_data: {...} }
+            // Use the API client like other endpoints (includes auth headers)
+            const response = await api.get('/master-data.json');
+            const jsonData = response.data;
+
             if (jsonData.master_data) {
                 setData(jsonData.master_data);
             } else {
-                console.error("Master Data Response missing 'master_data' key:", jsonData);
-                throw new Error("Invalid Master Data Format");
+                // Fallback for different JSON structure
+                setData(jsonData.master_data || jsonData);
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Unknown error');

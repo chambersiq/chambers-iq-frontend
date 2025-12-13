@@ -19,6 +19,7 @@ export interface Template {
     name: string
     description: string
     content: string // HTML or Markdown
+    category: string
     variables: TemplateVariable[]
     documentType?: string
     caseType?: string

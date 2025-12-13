@@ -18,8 +18,9 @@ import { TextAlign } from '@tiptap/extension-text-align'
 import { useUpdateDraft, useDraft } from '@/hooks/api/useDrafts'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
-import { toast } from 'sonner'
+import { useCase } from '@/hooks/api/useCases'
 import { useMasterData } from '@/contexts/MasterDataContext'
+import { toast } from 'sonner'
 
 export function DraftEditor() {
     const params = useParams()
@@ -27,11 +28,12 @@ export function DraftEditor() {
     const companyId = user?.companyId || ''
     const draftId = params.id as string
 
-    // Master Data for display
-    const { data: masterData } = useMasterData()
+    // Fetch existing draft
 
     // Fetch existing draft
     const { data: draft, isLoading } = useDraft(companyId, draftId)
+    const { data: caseData } = useCase(companyId, draft?.caseId || '')
+    const { data: masterData } = useMasterData()
     const updateDraft = useUpdateDraft(companyId)
 
 
@@ -182,12 +184,10 @@ export function DraftEditor() {
                                 </>
                             )}
 
-                            {draft?.documentTypeId && masterData && (
+                            {draft?.documentType && draft.documentType !== "General" && (
                                 <>
                                     <span className="text-slate-300">•</span>
-                                    <span className="text-slate-600">Type: <span className="font-medium text-slate-800">
-                                        {masterData.document_types.find(dt => dt.id === draft.documentTypeId)?.name || 'Unknown Type'}
-                                    </span></span>
+                                    <span className="text-slate-600">Type: <span className="font-medium text-slate-800">{draft.documentType}</span></span>
                                 </>
                             )}
 
@@ -257,7 +257,7 @@ export function DraftEditor() {
                 <div className="w-[400px] border-l bg-white flex flex-col shrink-0 print:hidden">
                     <MultiAgentWorkflowManager
                         caseId={draft?.caseId || 'demo-case'}
-                        caseType={draft?.caseType || 'General'}
+                        caseType={caseData ? (masterData?.case_types.find(t => t.id === caseData.caseTypeId)?.name || caseData.caseSubType || 'General') : 'General'}
                         clientId={draft?.clientId || 'demo-client'}
                         onWorkflowComplete={handleWorkflowComplete}
                         onWorkflowProgress={handleWorkflowProgress}

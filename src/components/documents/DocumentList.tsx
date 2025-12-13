@@ -22,7 +22,7 @@ import {
 import { Document, DocumentType } from '@/types/document'
 import { formatDate } from '@/lib/utils'
 
-// Mock data
+// Mock data - Updated with Indian Law Categorization
 const MOCK_DOCS: Document[] = [
     {
         documentId: '1',
@@ -36,7 +36,13 @@ const MOCK_DOCS: Document[] = [
         aiConfidence: 0.95,
         uploadedBy: 'John Doe',
         createdAt: '2024-01-15T10:00:00Z',
-        updatedAt: '2024-01-15T10:00:00Z'
+        updatedAt: '2024-01-15T10:00:00Z',
+        // Required Indian Law Categorization
+        documentTypeId: 'DT_001', // Plaint
+        documentCategoryId: 'DCAT_01', // Pleadings
+        courtLevelId: 'CL_DC', // District Court
+        status: 'draft',
+        parentCaseTypeId: 'CT_CIV_01' // Civil Suit
     },
     {
         documentId: '2',
@@ -50,7 +56,13 @@ const MOCK_DOCS: Document[] = [
         aiConfidence: 0.88,
         uploadedBy: 'John Doe',
         createdAt: '2024-01-16T14:30:00Z',
-        updatedAt: '2024-01-16T14:30:00Z'
+        updatedAt: '2024-01-16T14:30:00Z',
+        // Required Indian Law Categorization
+        documentTypeId: 'DT_017', // Settlement Agreement
+        documentCategoryId: 'DCAT_06', // Contracts & Agreements
+        courtLevelId: 'CL_HC', // High Court
+        status: 'draft',
+        parentCaseTypeId: 'CT_CIV_01' // Civil Suit
     },
     {
         documentId: '3',
@@ -63,7 +75,13 @@ const MOCK_DOCS: Document[] = [
         aiStatus: 'processing',
         uploadedBy: 'Jane Smith',
         createdAt: '2024-01-20T09:15:00Z',
-        updatedAt: '2024-01-20T09:15:00Z'
+        updatedAt: '2024-01-20T09:15:00Z',
+        // Required Indian Law Categorization
+        documentTypeId: 'DT_010', // Evidence Affidavit
+        documentCategoryId: 'DCAT_03', // Evidence & Affidavits
+        courtLevelId: 'CL_DC', // District Court
+        status: 'draft',
+        parentCaseTypeId: 'CT_CIV_01' // Civil Suit
     }
 ]
 

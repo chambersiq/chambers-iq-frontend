@@ -12,8 +12,8 @@ import { useCreateTemplate, useGetWorkflowStatus, useReviewWorkflow } from '@/ho
 import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
-
-
+import { TemplateCategory } from '@/types/template'
+import { DOCUMENT_TYPES } from '@/lib/constants'
 import {
     Select,
     SelectContent,
@@ -23,8 +23,6 @@ import {
 } from "@/components/ui/select"
 
 
-import { useMasterData } from '@/contexts/MasterDataContext'
-
 function NewTemplateContent() {
     const queryClient = useQueryClient()
     const router = useRouter()
@@ -32,13 +30,10 @@ function NewTemplateContent() {
     const { user } = useAuth()
     const companyId = user?.companyId || ''
     const createTemplate = useCreateTemplate(companyId)
-    const { data: masterData } = useMasterData()
 
     const [name, setName] = useState('')
     const [description, setDescription] = useState('')
-    const [courtLevelId, setCourtLevelId] = useState('')
-    const [caseTypeId, setCaseTypeId] = useState('')
-    const [documentTypeId, setDocumentTypeId] = useState('')
+    const [category, setCategory] = useState<TemplateCategory>('other')
     const [templateContent, setTemplateContent] = useState('')
 
     const threadId = searchParams.get('thread_id')
@@ -112,15 +107,6 @@ function NewTemplateContent() {
     useEffect(() => {
         if (searchParams.get('source') === 'ai') {
             setIsAIMode(true)
-            // Pre-fill fields from URL parameters if available
-            const paramDocType = searchParams.get('documentTypeId')
-            const paramCourtLevel = searchParams.get('courtLevelId')
-            const paramCaseType = searchParams.get('caseTypeId')
-
-            if (paramDocType) setDocumentTypeId(paramDocType)
-            if (paramCourtLevel) setCourtLevelId(paramCourtLevel)
-            if (paramCaseType) setCaseTypeId(paramCaseType)
-
             // Legacy mock support
             const aiContent = localStorage.getItem('ai_generated_template')
             if (aiContent) {
@@ -177,12 +163,10 @@ function NewTemplateContent() {
         createTemplate.mutate({
             name,
             description,
+            category,
             content: templateContent,
             variables: [], // TODO: Extract variables from content
             isSystem: false,
-            courtLevelId: courtLevelId || undefined,
-            caseTypeId: caseTypeId || undefined,
-            documentTypeId: documentTypeId || undefined,
             createdBy: user?.fullName || user?.email || 'Unknown User'
         }, {
             onSuccess: () => {
@@ -234,59 +218,20 @@ function NewTemplateContent() {
                             onChange={(e) => setName(e.target.value)}
                         />
                         <div className="flex items-center gap-2">
-                            {/* Document Type Dropdown */}
-                            <Select value={documentTypeId} onValueChange={setDocumentTypeId}>
-                                <SelectTrigger className="w-[200px] h-8 text-xs">
-                                    <SelectValue placeholder="Document Type (Optional)" />
+                            <Select value={category} onValueChange={(v) => setCategory(v as TemplateCategory)}>
+                                <SelectTrigger className="w-[150px] h-8 text-xs">
+                                    <SelectValue placeholder="Category" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {/* Filter by category if selected, otherwise show all? */}
-                                    {/* For now show all or filter if category is mapped. 
-                                        The legacy category 'contract' might match master data category 'DCAT_06'? 
-                                        That mapping is loose. Let's just show all for now properly grouped or flat.
-                                    */}
-                                    {masterData?.document_types?.map((dt) => (
-                                        <SelectItem key={dt.id} value={dt.id}>
-                                            {dt.name}
-                                        </SelectItem>
-                                    )) || <div className="p-2 text-xs">Loading...</div>}
-                                </SelectContent>
-                            </Select>
-
-                            {/* Court Level Dropdown */}
-                            <Select value={courtLevelId} onValueChange={setCourtLevelId}>
-                                <SelectTrigger className="w-[180px] h-8 text-xs">
-                                    <SelectValue placeholder="Court Level (Optional)" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {masterData?.court_levels.map((cl) => (
-                                        <SelectItem key={cl.id} value={cl.id}>
-                                            {cl.name}
+                                    {DOCUMENT_TYPES.map(type => (
+                                        <SelectItem key={type.value} value={type.category}>
+                                            {type.label}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
-
-                            {/* Case Type Dropdown */}
-                            {/* Only show if we have case types data? Or just show empty if loading */}
-                            <Select value={caseTypeId} onValueChange={setCaseTypeId}>
-                                <SelectTrigger className="w-[180px] h-8 text-xs">
-                                    <SelectValue placeholder="Case Type (Optional)" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {/* We can group these if needed, but flat list is fine for now */}
-                                    {masterData?.case_types?.map((ct) => (
-                                        <SelectItem key={ct.id} value={ct.id}>
-                                            {ct.name}
-                                        </SelectItem>
-                                    )) || (
-                                            <div className="p-2 text-xs text-muted-foreground">Loading types...</div>
-                                        )}
-                                </SelectContent>
-                            </Select>
-
                             <Input
-                                className="h-8 text-xs w-[200px]"
+                                className="h-8 text-xs w-[300px]"
                                 placeholder="Description (optional)"
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
