@@ -131,7 +131,7 @@ export default function DocumentsPage() {
                                     {/* Type */}
                                     <div className="md:col-span-3 hidden md:block">
                                         <Badge variant="outline" className="font-normal capitalize bg-slate-50">
-                                            {caseItem.caseType.replace('-', ' ')}
+                                            {(caseItem.caseType || (caseItem.caseTypeId || 'General')).replace(/_/g, ' ').replace(/-/g, ' ')}
                                         </Badge>
                                     </div>
 

@@ -5,9 +5,11 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useFormContext, Controller } from 'react-hook-form'
+import { useMasterData } from '@/contexts/MasterDataContext'
 
 export function CourtDetailsSection() {
     const { register, control } = useFormContext()
+    const { data: masterData } = useMasterData()
 
     return (
         <Card>
@@ -17,13 +19,33 @@ export function CourtDetailsSection() {
             <CardContent className="space-y-6">
                 <div className="grid gap-6 md:grid-cols-2">
                     <div className="space-y-2">
-                        <Label htmlFor="jurisdiction">Jurisdiction</Label>
-                        <Input
-                            id="jurisdiction"
-                            placeholder="e.g. Delhi, Mumbai, Karnataka"
-                            {...register('jurisdiction')}
+                        <Label htmlFor="courtLevelId">Court Level (Indian Law)</Label>
+                        <Controller
+                            control={control}
+                            name="courtLevelId"
+                            render={({ field }) => (
+                                <Select
+                                    onValueChange={field.onChange}
+                                    value={field.value}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select court level" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {masterData && masterData.court_levels.map((level) => (
+                                            <SelectItem key={level.id} value={level.id}>
+                                                {level.name} ({level.short_code})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            )}
                         />
                     </div>
+                </div>
+
+                <div className="grid gap-6 md:grid-cols-2">
+
                     <div className="space-y-2">
                         <Label htmlFor="courtName">Court Name</Label>
                         <Input

@@ -101,7 +101,7 @@ export default function CaseDetailPage({ params }: { params: { id: string } }) {
                         <Badge variant={caseData.status === 'active' ? 'default' : 'secondary'} className="capitalize">
                             {caseData.status}
                         </Badge>
-                        <Badge variant="outline" className="capitalize">{caseData.caseType.replace('-', ' ')}</Badge>
+                        <Badge variant="outline" className="capitalize">{(caseData.caseType || (caseData as any).caseTypeId || 'General').replace(/-/g, ' ')}</Badge>
                     </div>
                     <p className="mt-2 text-slate-600">Case #{caseData.caseNumber} • Client: {caseData.clientName}</p>
                 </div>

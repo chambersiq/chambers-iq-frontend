@@ -32,6 +32,9 @@ import { formatDate, formatTimeAgo } from '@/lib/utils'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 import { useDrafts, useDeleteDraft } from '@/hooks/api/useDrafts'
+import { useClients } from '@/hooks/api/useClients'
+import { useCases } from '@/hooks/api/useCases'
+import { useMasterData } from '@/contexts/MasterDataContext'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -59,6 +62,16 @@ export function DraftList({ caseId }: DraftListProps) {
     const [statusFilter, setStatusFilter] = useState<string>('all')
     const [caseFilter, setCaseFilter] = useState<string>('all')
     const [clientFilter, setClientFilter] = useState<string>('all')
+    const [docTypeFilter, setDocTypeFilter] = useState<string>('all')
+
+    // Data Hooks for Filters
+    const { data: clients = [] } = useClients(user?.companyId || '')
+    // Only fetch cases for selected client if one is selected, else fetch all (if supported) or filtered in memory
+    // Currently useCases takes (companyId, clientId). If clientId is '', it fetches all? Let's assume yes or check hook.
+    // actually useCases(companyId, clientId) usually fetches for that client. If clientId is empty, maybe all?
+    // Let's assume we want dependent dropdowns.
+    const { data: cases = [] } = useCases(user?.companyId || '', clientFilter !== 'all' ? clientFilter : undefined)
+    const { data: masterData } = useMasterData()
 
     if (isLoading) {
         return (
@@ -81,27 +94,23 @@ export function DraftList({ caseId }: DraftListProps) {
         return <div className="text-red-500">Error loading drafts</div>
     }
 
-    // Get unique values for filters from ACTUAL data
-    const uniqueCases = Array.from(new Set(drafts.map(d => JSON.stringify({ id: d.caseId, name: d.caseName || 'Unknown Case' }))))
-        .map(s => JSON.parse(s))
-
-    const uniqueClients = Array.from(new Set(drafts.map(d => JSON.stringify({ id: d.clientId, name: d.clientName || 'Unknown Client' }))))
-        .map(s => JSON.parse(s))
-
     // Filter drafts
     const filteredDrafts = drafts.filter(d => {
-        // If caseId prop is provided, the hook already filters by it, but good to double check?
-        // Actually hook returns what backend gives. If caseId passed, backend filters.
-
         const matchesSearch = d.name.toLowerCase().includes(searchTerm.toLowerCase())
         const matchesStatus = statusFilter === 'all' || d.status === statusFilter
         const matchesCase = caseId ? true : (caseFilter === 'all' || d.caseId === caseFilter)
-        // If client filter is selected, check clientId. 
-        // Backend stores clientId. 
         const matchesClient = clientFilter === 'all' || d.clientId === clientFilter
+        const matchesDocType = docTypeFilter === 'all' || d.documentTypeId === docTypeFilter
 
-        return matchesSearch && matchesStatus && matchesCase && matchesClient
+        return matchesSearch && matchesStatus && matchesCase && matchesClient && matchesDocType
     })
+
+    // Helper to get Doc Type Name
+    const getDocTypeName = (id?: string) => {
+        if (!id || !masterData) return 'General'
+        const type = masterData.document_types.find(t => t.id === id)
+        return type ? type.name : 'General'
+    }
 
     return (
         <div className="space-y-4">
@@ -120,30 +129,52 @@ export function DraftList({ caseId }: DraftListProps) {
 
                     {!caseId && (
                         <>
+                            {/* Client Filter (Primary) */}
+                            <Select value={clientFilter} onValueChange={(val) => {
+                                setClientFilter(val)
+                                setCaseFilter('all') // Reset case filter when client changes
+                            }}>
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Filter by Client" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Clients</SelectItem>
+                                    {clients.map(c => (
+                                        <SelectItem key={c.clientId} value={c.clientId}>
+                                            {c.clientType === 'individual' ? c.fullName : c.companyName}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+
+                            {/* Case Filter (Dependent) */}
                             <Select value={caseFilter} onValueChange={setCaseFilter}>
                                 <SelectTrigger className="w-[180px]">
                                     <SelectValue placeholder="Filter by Case" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">All Cases</SelectItem>
-                                    {uniqueCases.map((c: any) => (
-                                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-
-                            <Select value={clientFilter} onValueChange={setClientFilter}>
-                                <SelectTrigger className="w-[180px]">
-                                    <SelectValue placeholder="Filter by Client" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All Clients</SelectItem>
-                                    {uniqueClients.map((c: any) => (
-                                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                                    {cases.map(c => (
+                                        <SelectItem key={c.caseId} value={c.caseId}>{c.caseName}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </>
+                    )}
+
+                    {/* Document Type Filter */}
+                    {masterData && (
+                        <Select value={docTypeFilter} onValueChange={setDocTypeFilter}>
+                            <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Doc Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Types</SelectItem>
+                                {masterData.document_types.map(t => (
+                                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     )}
 
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -165,7 +196,8 @@ export function DraftList({ caseId }: DraftListProps) {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Draft Name</TableHead>
-                            {!caseId && <TableHead>Case</TableHead>}
+                            <TableHead>Reference</TableHead>
+                            <TableHead>Type</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead>Last Edited</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
@@ -174,7 +206,7 @@ export function DraftList({ caseId }: DraftListProps) {
                     <TableBody>
                         {filteredDrafts.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={caseId ? 4 : 5} className="h-24 text-center text-muted-foreground">
+                                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                                     No drafts found.
                                 </TableCell>
                             </TableRow>
@@ -187,14 +219,17 @@ export function DraftList({ caseId }: DraftListProps) {
                                             {draft.name}
                                         </Link>
                                     </TableCell>
-                                    {!caseId && (
-                                        <TableCell>
-                                            <div className="flex flex-col">
-                                                <span>{draft.caseName || 'Unknown Case'}</span>
-                                                <span className="text-xs text-muted-foreground">{draft.clientName || 'Unknown Client'}</span>
-                                            </div>
-                                        </TableCell>
-                                    )}
+                                    <TableCell>
+                                        <div className="flex flex-col">
+                                            <span className="font-medium text-slate-700">{draft.clientName || 'Unknown Client'}</span>
+                                            <span className="text-xs text-muted-foreground">{draft.caseName || 'Unknown Case'}</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant="outline" className="font-normal text-slate-600">
+                                            {getDocTypeName(draft.documentTypeId)}
+                                        </Badge>
+                                    </TableCell>
                                     <TableCell>
                                         <Badge variant={draft.status === 'draft' ? 'secondary' : 'warning'} className="capitalize">
                                             {draft.status}

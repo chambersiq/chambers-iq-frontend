@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { UseFormRegister, FieldValues } from 'react-hook-form'
+import { useMasterData } from '@/contexts/MasterDataContext'
 
 interface CompanyClientFormProps {
     register: UseFormRegister<FieldValues>
@@ -12,6 +13,8 @@ interface CompanyClientFormProps {
 }
 
 export function CompanyClientForm({ register, setValue }: CompanyClientFormProps) {
+    const { data: masterData } = useMasterData()
+
     return (
         <div className="space-y-6">
             {/* Company Information */}
@@ -26,22 +29,7 @@ export function CompanyClientForm({ register, setValue }: CompanyClientFormProps
                         <Label htmlFor="dba">DBA / Trade Name</Label>
                         <Input id="dba" placeholder="Acme Solutions" {...register('dbaName')} />
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="companyType">Company Type</Label>
-                        <Select onValueChange={(val) => setValue('companyType', val)}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="pvt-ltd">Private Limited</SelectItem>
-                                <SelectItem value="public-ltd">Public Limited</SelectItem>
-                                <SelectItem value="llp">LLP</SelectItem>
-                                <SelectItem value="partnership">Partnership</SelectItem>
-                                <SelectItem value="sole-proprietor">Sole Proprietor</SelectItem>
-                                <SelectItem value="non-profit">Non-Profit / Trust</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
+
                     <div className="space-y-2">
                         <Label htmlFor="taxId">GSTIN / PAN</Label>
                         <Input id="taxId" placeholder="22AAAAA0000A1Z5" {...register('taxId')} />

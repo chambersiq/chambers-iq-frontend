@@ -12,28 +12,36 @@ import { useForm } from 'react-hook-form'
 import { useCreateClient, useUpdateClient } from '@/hooks/api/useClients'
 import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'sonner'
+import { useMasterData } from '@/contexts/MasterDataContext'
 
 export interface ClientFormProps {
     initialData?: any // Client type from API
     clientId?: string
 }
 
+
+
 export function ClientForm({ initialData, clientId }: ClientFormProps) {
     const router = useRouter()
     const { user } = useAuth()
     const companyId = user?.companyId
-    const [clientType, setClientType] = useState<'individual' | 'company'>(
-        initialData?.clientType || 'individual'
-    )
 
-    const { register, handleSubmit, setValue, reset } = useForm({
+    const { data: masterData } = useMasterData()
+    const { register, handleSubmit, setValue, reset, watch } = useForm({
         defaultValues: initialData || {}
     })
 
-    // Mutations
+    // Watch partyTypeId to sync clientType logic if needed, or just handle in onValueChange
+    const [selectedPartyTypeId, setSelectedPartyTypeId] = useState<string>(
+        initialData?.partyTypeId || 'PT_01'
+    )
+
+    // Derived State
+    const clientType = selectedPartyTypeId === 'PT_01' ? 'individual' : 'company'
+
+    // ... (keep mutations)
     const createClient = useCreateClient(companyId || '')
     const updateClient = useUpdateClient(companyId || '')
-
     const isEditing = !!initialData
 
     const onSubmit = (data: any) => {
@@ -45,8 +53,9 @@ export function ClientForm({ initialData, clientId }: ClientFormProps) {
         const payload = {
             ...data,
             clientType: clientType,
+            partyTypeId: selectedPartyTypeId
         }
-
+        // ... (rest of submit)
         if (isEditing && clientId) {
             updateClient.mutate({ clientId, data: payload }, {
                 onSuccess: () => {
@@ -78,39 +87,35 @@ export function ClientForm({ initialData, clientId }: ClientFormProps) {
                 {/* Client Type Selection */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Client Type</CardTitle>
-                        <CardDescription>Select the type of client you are adding.</CardDescription>
+                        <CardTitle>Client Entity Type</CardTitle>
+                        <CardDescription>Select the legal status of the client.</CardDescription>
                     </CardHeader>
                     <CardContent>
+                        {/* Use a Grid of Radio Cards for better UX with many options */}
                         <RadioGroup
-                            defaultValue="individual"
-                            value={clientType}
+                            value={selectedPartyTypeId}
                             onValueChange={(value) => {
-                                setClientType(value as 'individual' | 'company')
+                                setSelectedPartyTypeId(value)
+                                setValue('partyTypeId', value)
                             }}
-                            className="grid grid-cols-2 gap-4"
+                            className="grid grid-cols-1 md:grid-cols-3 gap-4"
                             disabled={isEditing}
                         >
-                            <div>
-                                <RadioGroupItem value="individual" id="individual" className="peer sr-only" />
-                                <Label
-                                    htmlFor="individual"
-                                    className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary ${isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    <span className="text-lg font-semibold">Individual</span>
-                                    <span className="text-sm text-muted-foreground">Person</span>
-                                </Label>
-                            </div>
-                            <div>
-                                <RadioGroupItem value="company" id="company" className="peer sr-only" />
-                                <Label
-                                    htmlFor="company"
-                                    className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary ${isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    <span className="text-lg font-semibold">Company</span>
-                                    <span className="text-sm text-muted-foreground">Business Entity</span>
-                                </Label>
-                            </div>
+                            {masterData?.party_types?.map((type) => (
+                                <div key={type.id}>
+                                    <RadioGroupItem value={type.id} id={type.id} className="peer sr-only" />
+                                    <Label
+                                        htmlFor={type.id}
+                                        className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary ${isEditing ? 'opacity-50 cursor-not-allowed' : ''} cursor-pointer h-full`}
+                                    >
+                                        <span className="text-base font-semibold text-center">{type.name}</span>
+                                        {/* Optional: Add icon or description if available in master data */}
+                                    </Label>
+                                </div>
+                            ))}
+                            {!masterData && (
+                                <div className="col-span-3 text-center text-muted-foreground">Loading types...</div>
+                            )}
                         </RadioGroup>
                     </CardContent>
                 </Card>

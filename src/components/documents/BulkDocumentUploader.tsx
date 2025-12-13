@@ -13,6 +13,23 @@ import { Upload, X, FileText, Sparkles, Plus, Trash2, Filter } from 'lucide-reac
 import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
 import { DocumentType } from '@/types/document'
+import { useMasterData } from '@/contexts/MasterDataContext'
+
+// Helper to map Category Name/ID to DocumentType
+const getGenericTypeFromCategory = (categoryId: string, categories: any[]): DocumentType => {
+    const cat = categories.find(c => c.id === categoryId);
+    if (!cat) return 'other';
+    const name = cat.name.toLowerCase();
+
+    if (name.includes('pleading')) return 'pleading';
+    if (name.includes('application') || name.includes('motion')) return 'motion';
+    if (name.includes('evidence')) return 'evidence';
+    if (name.includes('contract') || name.includes('agreement')) return 'contract';
+    if (name.includes('notice') || name.includes('correspondence')) return 'correspondence';
+    if (name.includes('order') || name.includes('judgment')) return 'order';
+
+    return 'other';
+}
 import { useRouter } from 'next/navigation'
 import { useCreateDocumentUrl } from '@/hooks/api/useDocuments'
 import { useAuth } from '@/hooks/useAuth'
@@ -29,7 +46,8 @@ interface QueueItem {
     summary: string
     aiGenerate: boolean
     progress: number
-    caseId?: string // Store targeted caseId per item if needed, though we use global selection for now
+    caseId?: string
+    documentTypeId?: string
 }
 
 interface BulkDocumentUploaderProps {
@@ -67,9 +85,12 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
         ? cases.filter((c: any) => c.clientId === selectedClientId)
         : [];
 
+    const { data: masterData } = useMasterData()
+
     // Form State
     const [title, setTitle] = useState('')
     const [type, setType] = useState<DocumentType>('motion')
+    const [documentTypeId, setDocumentTypeId] = useState<string>('')
     const [summary, setSummary] = useState('')
     const [aiGenerate, setAiGenerate] = useState(false)
     const [selectedFiles, setSelectedFiles] = useState<File[]>([])
@@ -128,7 +149,8 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
             type,
             summary,
             aiGenerate,
-            progress: 0
+            progress: 0,
+            documentTypeId: documentTypeId === 'other' ? undefined : documentTypeId // Don't send 'other' as an ID
         }))
 
         setQueue(prev => [...prev, ...newItems])
@@ -160,11 +182,13 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
                     caseId: selectedCaseId,
                     name: item.file.name,
                     type: item.type,
+                    // Pass documentTypeId if available
+                    ...(item.documentTypeId ? { documentTypeId: item.documentTypeId } : {}),
                     fileSize: item.file.size,
                     mimeType: item.file.type,
                     description: item.summary,
                     generateSummary: item.aiGenerate
-                })
+                } as any) // Cast as any because hook type might not be updated yet with documentTypeId optional
 
                 // 2. Upload to S3
                 await fetch(uploadUrl, {
@@ -278,19 +302,67 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <Label>Document Type <span className="text-red-500">*</span></Label>
-                                <Select value={type} onValueChange={(v: DocumentType) => setType(v)}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="pleading">Pleading</SelectItem>
-                                        <SelectItem value="motion">Motion</SelectItem>
-                                        <SelectItem value="evidence">Evidence</SelectItem>
-                                        <SelectItem value="contract">Contract</SelectItem>
-                                        <SelectItem value="correspondence">Correspondence</SelectItem>
-                                        <SelectItem value="other">Other</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                {(() => {
+                                    // 1. Find Current Case
+                                    const currentCase = cases.find((c: any) => c.caseId === (selectedCaseId || caseId));
+                                    // 2. Get Allowed Doc Types
+                                    let validDocTypes = masterData?.document_types || [];
+
+                                    if (currentCase?.caseTypeId && masterData) {
+                                        const ct = masterData.case_types.find(ct => ct.id === currentCase.caseTypeId);
+                                        if (ct && ct.allowed_doc_types && ct.allowed_doc_types.length > 0) {
+                                            validDocTypes = validDocTypes.filter(dt =>
+                                                ct.allowed_doc_types.includes(dt.id) || dt.id === 'DT_034' // Always include 'Other'
+                                            );
+                                        }
+                                    }
+
+                                    // 3. Group by Category
+                                    const grouped = validDocTypes.reduce((acc, dt) => {
+                                        const cat = masterData?.document_categories.find(c => c.id === dt.category_id);
+                                        const catName = cat?.name || 'Other';
+                                        if (!acc[catName]) acc[catName] = [];
+                                        acc[catName].push(dt);
+                                        return acc;
+                                    }, {} as Record<string, typeof validDocTypes>);
+
+                                    return (
+                                        <Select
+                                            value={documentTypeId}
+                                            onValueChange={(val) => {
+                                                setDocumentTypeId(val);
+                                                if (val === 'other') {
+                                                    setType('other');
+                                                } else {
+                                                    // Auto-set generic type
+                                                    const dt = masterData?.document_types.find(d => d.id === val);
+                                                    if (dt && masterData) {
+                                                        setType(getGenericTypeFromCategory(dt.category_id, masterData.document_categories));
+                                                    }
+                                                }
+                                            }}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select specific document type" />
+                                            </SelectTrigger>
+                                            <SelectContent className="max-h-[300px]">
+                                                {Object.entries(grouped).map(([category, types]) => (
+                                                    <div key={category}>
+                                                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-slate-50 sticky top-0">
+                                                            {category}
+                                                        </div>
+                                                        {types.map(dt => (
+                                                            <SelectItem key={dt.id} value={dt.id}>
+                                                                {dt.name}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </div>
+                                                ))}
+
+                                            </SelectContent>
+                                        </Select>
+                                    );
+                                })()}
                             </div>
 
                             <div className="space-y-2">
@@ -485,6 +557,6 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     )
 }

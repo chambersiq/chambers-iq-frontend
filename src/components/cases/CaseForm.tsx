@@ -18,6 +18,7 @@ import { useClients } from '@/hooks/api/useClients'
 import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'sonner'
 import { useEffect } from 'react'
+import { useMasterData } from '@/contexts/MasterDataContext'
 
 interface CaseFormProps {
     initialData?: Partial<Case>
@@ -28,6 +29,7 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
     const router = useRouter()
     const { user } = useAuth()
     const companyId = user?.companyId || ''
+    const { data: masterData } = useMasterData()
 
     const { data: clients = [] } = useClients(companyId)
     console.log("Clients data in CaseForm:", clients)
@@ -247,38 +249,59 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
                                 )}
                             />
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="type" className={errors.caseType ? "text-red-500" : ""}>Case Type *</Label>
-                            <Controller
-                                control={methods.control}
-                                name="caseType"
-                                rules={{ required: "Case Type is required" }}
-                                render={({ field }) => (
-                                    <Select
-                                        onValueChange={field.onChange}
-                                        value={field.value}
-                                    >
-                                        <SelectTrigger className={errors.caseType ? "border-red-500 focus:ring-red-500" : ""}>
-                                            <SelectValue placeholder="Select type" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="civil-litigation">Civil Litigation</SelectItem>
-                                            <SelectItem value="criminal-defense">Criminal Defense</SelectItem>
-                                            <SelectItem value="family-law">Family Law</SelectItem>
-                                            <SelectItem value="corporate-law">Corporate Law</SelectItem>
-                                            <SelectItem value="intellectual-property">Intellectual Property</SelectItem>
-                                            <SelectItem value="employment">Employment</SelectItem>
-                                            <SelectItem value="real-estate">Real Estate</SelectItem>
-                                            <SelectItem value="bankruptcy">Bankruptcy</SelectItem>
-                                            <SelectItem value="estate-planning">Estate Planning</SelectItem>
-                                            <SelectItem value="tax-law">Tax Law</SelectItem>
-                                            <SelectItem value="other">Other</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                )}
-                            />
-                            {errors.caseType && <span className="text-xs text-red-500">{errors.caseType.message}</span>}
-                        </div>
+                        {/* Legacy Case Category Removed */}
+
+                        {/* Phase 2: Indian Law Categorization */}
+                        {masterData && (
+                            <>
+                                <div className="space-y-2">
+                                    <Label htmlFor="practiceArea">Practice Area (Indian Law)</Label>
+                                    <Controller
+                                        control={methods.control}
+                                        name="practiceArea"
+                                        render={({ field }) => {
+                                            const areas = Array.from(new Set(masterData.case_types.map(ct => ct.practice_area)));
+                                            return (
+                                                <Select onValueChange={field.onChange} value={field.value}>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select practice area" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {areas.map(area => (
+                                                            <SelectItem key={area} value={area}>{area}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            );
+                                        }}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="caseTypeId">Specific Case Type</Label>
+                                    <Controller
+                                        control={methods.control}
+                                        name="caseTypeId"
+                                        render={({ field }) => {
+                                            const selectedArea = watch('practiceArea');
+                                            const types = masterData.case_types.filter(ct => !selectedArea || ct.practice_area === selectedArea);
+                                            return (
+                                                <Select onValueChange={field.onChange} value={field.value}>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select specific type" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {types.map(ct => (
+                                                            <SelectItem key={ct.id} value={ct.id}>{ct.name}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            );
+                                        }}
+                                    />
+                                </div>
+                            </>
+                        )}
+
                         <div className="space-y-2">
                             <Label htmlFor="priority">Priority</Label>
                             <Controller

@@ -12,7 +12,6 @@ import {
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { DOCUMENT_TYPES } from '@/lib/constants'
 import {
     Select,
     SelectContent,
@@ -29,12 +28,12 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import { TemplateCategory } from '@/types/template'
 import { formatDate } from '@/lib/utils'
 import Link from 'next/link'
 import { useTemplates, useDeleteTemplate } from '@/hooks/api/useTemplates'
 import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'sonner'
+import { useMasterData } from '@/contexts/MasterDataContext'
 import {
     AlertDialog,
     AlertDialogAction,
@@ -45,15 +44,6 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-
-const CATEGORY_COLORS: Record<TemplateCategory, string> = {
-    'contract': 'default',
-    'pleading': 'destructive',
-    'motion': 'destructive',
-    'letter': 'outline',
-    'discovery': 'secondary',
-    'other': 'secondary'
-}
 
 function DescriptionCell({ description }: { description: string }) {
     const [isExpanded, setIsExpanded] = useState(false)
@@ -80,17 +70,18 @@ export function TemplateList() {
     const { user } = useAuth()
     const companyId = user?.companyId || ''
     const { data: templates = [], isLoading } = useTemplates(companyId)
+    const { data: masterData } = useMasterData()
     const deleteTemplate = useDeleteTemplate(companyId)
 
     const [searchTerm, setSearchTerm] = useState('')
-    const [categoryFilter, setCategoryFilter] = useState<string>('all')
+    const [documentTypeFilter, setDocumentTypeFilter] = useState<string>('all')
     const [templateToDelete, setTemplateToDelete] = useState<string | null>(null)
 
     const filteredTemplates = templates.filter(t => {
         const matchesSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             t.description.toLowerCase().includes(searchTerm.toLowerCase())
-        const matchesCategory = categoryFilter === 'all' || t.category === categoryFilter
-        return matchesSearch && matchesCategory
+        const matchesDocumentType = documentTypeFilter === 'all' || t.documentTypeId === documentTypeFilter
+        return matchesSearch && matchesDocumentType
     })
 
     const handleDelete = async (templateId: string) => {
@@ -144,15 +135,15 @@ export function TemplateList() {
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                        <SelectTrigger className="w-[150px]">
-                            <SelectValue placeholder="Category" />
+                    <Select value={documentTypeFilter} onValueChange={setDocumentTypeFilter}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Document Type" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">All Categories</SelectItem>
-                            {DOCUMENT_TYPES.map(type => (
-                                <SelectItem key={type.value} value={type.category}>
-                                    {type.label}
+                            <SelectItem value="all">All Document Types</SelectItem>
+                            {masterData?.document_types.map(dt => (
+                                <SelectItem key={dt.id} value={dt.id}>
+                                    {dt.name}
                                 </SelectItem>
                             ))}
                         </SelectContent>
@@ -166,7 +157,7 @@ export function TemplateList() {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Name</TableHead>
-                            <TableHead>Category</TableHead>
+                            <TableHead>Document Type</TableHead>
                             <TableHead className="w-[300px]">Description</TableHead>
                             <TableHead>Last Updated</TableHead>
                             <TableHead>Created By</TableHead>
@@ -192,9 +183,13 @@ export function TemplateList() {
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <Badge variant={CATEGORY_COLORS[t.category] as any} className="capitalize">
-                                            {t.category}
-                                        </Badge>
+                                        {t.documentTypeId ? (
+                                            <Badge variant="outline">
+                                                {masterData?.document_types.find(dt => dt.id === t.documentTypeId)?.name || t.documentTypeId}
+                                            </Badge>
+                                        ) : (
+                                            <span className="text-muted-foreground">-</span>
+                                        )}
                                     </TableCell>
                                     <TableCell className="text-sm">
                                         <DescriptionCell description={t.description} />

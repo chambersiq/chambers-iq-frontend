@@ -60,6 +60,15 @@ export interface Case {
 
     // Case Details
     jurisdiction?: 'federal' | 'state'
+    // Phase 2: Indian Law Categorization
+    courtLevelId?: string
+    caseTypeId?: string
+    practiceArea?: string
+    primaryStatuteId?: string
+    limitationYears?: number
+    allowedDocTypeIds?: string[]
+    reliefIds?: string[]
+
     venue?: string
     courtName?: string
     department?: string

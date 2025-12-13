@@ -37,6 +37,13 @@ export interface Document {
     updatedAt: string
     tags?: string[]
     description?: string
+
+    // Phase 2: Categorization
+    documentTypeId?: string
+    documentCategoryId?: string
+    courtLevelId?: string
+    status?: string
+    parentCaseTypeId?: string
 }
 
 export interface DocumentCreate {

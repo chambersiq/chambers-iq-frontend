@@ -11,12 +11,15 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Upload, X, FileText, AlertCircle, Sparkles } from 'lucide-react'
 import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
+import { useMasterData } from '@/contexts/MasterDataContext'
 
 export function DocumentUploader() {
     const [dragActive, setDragActive] = useState(false)
     const [files, setFiles] = useState<File[]>([])
     const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({})
     const inputRef = useRef<HTMLInputElement>(null)
+    const { data: masterData } = useMasterData()
+    const [documentTypeId, setDocumentTypeId] = useState<string>('')
 
     const handleDrag = (e: React.DragEvent) => {
         e.preventDefault()
@@ -144,16 +147,26 @@ export function DocumentUploader() {
                                 <div className="grid gap-4 md:grid-cols-2">
                                     <div className="space-y-2">
                                         <Label>Document Type</Label>
-                                        <Select>
+                                        <Select onValueChange={setDocumentTypeId} value={documentTypeId}>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select type" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="pleading">Pleading / Plaint</SelectItem>
-                                                <SelectItem value="motion">Application</SelectItem>
-                                                <SelectItem value="evidence">Evidence</SelectItem>
-                                                <SelectItem value="contract">Vakalatnama</SelectItem>
-                                                <SelectItem value="other">Other</SelectItem>
+                                                {masterData?.document_categories.map(cat => (
+                                                    <div key={cat.id}>
+                                                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                                                            {cat.name}
+                                                        </div>
+                                                        {masterData.document_types.filter(dt => dt.category_id === cat.id).map(dt => (
+                                                            <SelectItem key={dt.id} value={dt.id}>
+                                                                {dt.name}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </div>
+                                                ))}
+                                                {(!masterData) && (
+                                                    <SelectItem value="other">Other</SelectItem>
+                                                )}
                                             </SelectContent>
                                         </Select>
                                     </div>

@@ -19,12 +19,16 @@ import { useUpdateDraft, useDraft } from '@/hooks/api/useDrafts'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'sonner'
+import { useMasterData } from '@/contexts/MasterDataContext'
 
 export function DraftEditor() {
     const params = useParams()
     const { user } = useAuth()
     const companyId = user?.companyId || ''
     const draftId = params.id as string
+
+    // Master Data for display
+    const { data: masterData } = useMasterData()
 
     // Fetch existing draft
     const { data: draft, isLoading } = useDraft(companyId, draftId)
@@ -178,10 +182,12 @@ export function DraftEditor() {
                                 </>
                             )}
 
-                            {draft?.documentType && draft.documentType !== "General" && (
+                            {draft?.documentTypeId && masterData && (
                                 <>
                                     <span className="text-slate-300">•</span>
-                                    <span className="text-slate-600">Type: <span className="font-medium text-slate-800">{draft.documentType}</span></span>
+                                    <span className="text-slate-600">Type: <span className="font-medium text-slate-800">
+                                        {masterData.document_types.find(dt => dt.id === draft.documentTypeId)?.name || 'Unknown Type'}
+                                    </span></span>
                                 </>
                             )}
 

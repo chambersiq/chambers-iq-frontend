@@ -208,7 +208,7 @@ export function CaseList() {
                                     </TableCell>
                                     <TableCell>{c.clientName}</TableCell>
                                     <TableCell className="capitalize">
-                                        {c.caseType.replace('-', ' ')}
+                                        {(c.caseType || c.caseSubType || 'General').replace('-', ' ')}
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant={PRIORITY_COLORS[c.priority] as any} className="capitalize">

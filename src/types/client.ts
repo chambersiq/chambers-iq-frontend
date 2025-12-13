@@ -36,6 +36,8 @@ export interface IndividualClient {
     tags?: string[]
     referralSource?: string
 
+    partyTypeId?: string
+
     // Metadata
     createdAt: string
     updatedAt: string
@@ -92,6 +94,8 @@ export interface CompanyClient {
     tags?: string[]
     referralSource?: string
     parentCompany?: string
+
+    partyTypeId?: string
 
     // Metadata
     createdAt: string
