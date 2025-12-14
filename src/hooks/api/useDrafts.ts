@@ -66,7 +66,11 @@ export function useDeleteDraft(companyId: string) {
             await api.delete(`/${companyId}/drafts/${draftId}`);
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['drafts', companyId] });
+            // Invalidate all drafts queries for this company (exact: false matches partial keys)
+            queryClient.invalidateQueries({
+                queryKey: ['drafts', companyId],
+                exact: false
+            });
         },
     });
 }

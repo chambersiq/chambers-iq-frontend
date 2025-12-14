@@ -34,6 +34,16 @@ import { useAuth } from '@/hooks/useAuth'
 import { useDrafts, useDeleteDraft } from '@/hooks/api/useDrafts'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 interface DraftListProps {
     caseId?: string
@@ -44,21 +54,29 @@ export function DraftList({ caseId }: DraftListProps) {
     const { data: drafts = [], isLoading, error } = useDrafts(user?.companyId || '', caseId)
     const { mutateAsync: deleteDraft } = useDeleteDraft(user?.companyId || '')
 
-    const handleDelete = async (draftId: string) => {
-        if (!window.confirm("Are you sure you want to delete this draft?")) return
+    const [draftToDelete, setDraftToDelete] = useState<string | null>(null)
+    const [searchTerm, setSearchTerm] = useState('')
+    const [statusFilter, setStatusFilter] = useState<string>('all')
+    const [caseFilter, setCaseFilter] = useState<string>('all')
+    const [clientFilter, setClientFilter] = useState<string>('all')
+
+    const handleDelete = (draftId: string) => {
+        setDraftToDelete(draftId)
+    }
+
+    const confirmDelete = async () => {
+        if (!draftToDelete) return
         try {
-            await deleteDraft(draftId)
-            toast.success("Draft deleted")
+            await deleteDraft(draftToDelete)
+            toast.success("Draft deleted successfully")
+            setDraftToDelete(null)
         } catch (err) {
             console.error(err)
             toast.error("Failed to delete draft")
         }
     }
 
-    const [searchTerm, setSearchTerm] = useState('')
-    const [statusFilter, setStatusFilter] = useState<string>('all')
-    const [caseFilter, setCaseFilter] = useState<string>('all')
-    const [clientFilter, setClientFilter] = useState<string>('all')
+    const draftToDeleteName = drafts.find(d => d.draftId === draftToDelete)?.name
 
     if (isLoading) {
         return (
@@ -105,6 +123,26 @@ export function DraftList({ caseId }: DraftListProps) {
 
     return (
         <div className="space-y-4">
+            <AlertDialog open={!!draftToDelete} onOpenChange={(open) => !open && setDraftToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Draft</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete <span className="font-semibold text-foreground">"{draftToDeleteName}"</span>? This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            className="bg-red-600 hover:bg-red-700"
+                            onClick={confirmDelete}
+                        >
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
             {/* Filters */}
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex flex-1 items-center gap-2 flex-wrap">
