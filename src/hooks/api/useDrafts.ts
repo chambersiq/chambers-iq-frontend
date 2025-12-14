@@ -70,3 +70,17 @@ export function useDeleteDraft(companyId: string) {
         },
     });
 }
+
+export function useGenerateAITemplate() {
+    return useMutation({
+        mutationFn: async (data: { caseId: string; documentType: string }) => {
+            // Convert camelCase to snake_case for backend
+            const requestData = {
+                case_id: data.caseId,
+                document_type: data.documentType
+            };
+            const { data: response } = await api.post('/generate-ai-template', requestData);
+            return response;
+        },
+    });
+}

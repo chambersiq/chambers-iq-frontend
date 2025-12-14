@@ -15,7 +15,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useClients } from '@/hooks/api/useClients'
 import { useCases, useCase } from '@/hooks/api/useCases'
 import { useTemplates, useTemplate } from '@/hooks/api/useTemplates'
-import { useCreateDraft } from '@/hooks/api/useDrafts'
+import { useCreateDraft, useGenerateAITemplate } from '@/hooks/api/useDrafts'
 import { useMasterData } from '@/contexts/MasterDataContext'
 import { toast } from 'sonner'
 import api from '@/lib/api' // Direct API access for one-off fetches if needed, or better use queryClient/hooks
@@ -41,6 +41,7 @@ export default function NewDraftPage() {
     const { data: templates = [] } = useTemplates(companyId)
     const { data: masterData } = useMasterData()
     const createDraft = useCreateDraft(companyId)
+    const generateAITemplate = useGenerateAITemplate()
 
     // DEBUGGING
     console.log('[NewDraftPage] Debug Info:', {
@@ -91,9 +92,21 @@ DATE: ${new Date().toLocaleDateString()}
 
             initialContent += header
 
-            // 2. Fetch Template Content if selected
+            // 2. Generate or fetch content
             if (creationMode === 'ai') {
-                initialContent += `AI INSTRUCTIONS:\n${aiPrompt}\n\n(Note: The AI Agent will process these instructions in the next step of the workflow. For now, they are saved here.)\n\n`
+                // Generate AI template based on case and document type
+                try {
+                    const aiResult = await generateAITemplate.mutateAsync({
+                        caseId: caseId,
+                        documentType: docType
+                    })
+                    initialContent += aiResult.template_content
+                } catch (err) {
+                    console.error('Failed to generate AI template', err)
+                    toast.error('Failed to generate AI template, starting with blank draft.')
+                    // Fall back to AI instructions in content
+                    initialContent += `AI INSTRUCTIONS:\n${aiPrompt}\n\n(Note: AI template generation failed. Please regenerate.)\n\n`
+                }
             } else if (templateId !== 'blank') {
                 try {
                     // Manual fetch for template content to avoid hook rules issues or waiting
