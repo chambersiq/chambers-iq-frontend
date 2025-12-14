@@ -20,8 +20,6 @@ import { useMasterData } from '@/contexts/MasterDataContext'
 import { toast } from 'sonner'
 import api from '@/lib/api' // Direct API access for one-off fetches if needed, or better use queryClient/hooks
 
-import { DOCUMENT_TYPES } from '@/lib/constants'
-
 export default function NewDraftPage() {
     const router = useRouter()
     const { user } = useAuth()
@@ -57,17 +55,10 @@ export default function NewDraftPage() {
 
 
 
-    // Filter templates based on docType
+    // Filter templates based on docType (now using master data document type IDs)
     const filteredTemplates = templates.filter(t => {
         if (!docType) return true
-        // Find the corresponding document type ID from DOCUMENT_TYPES
-        const selectedType = DOCUMENT_TYPES.find(d => d.value === docType)
-        if (selectedType) {
-            // Find the master data document type that matches the category
-            const masterDocType = masterData?.document_types.find(dt => dt.name.toLowerCase().includes(selectedType.category.toLowerCase()))
-            return t.documentTypeId === masterDocType?.id
-        }
-        return true
+        return t.documentTypeId === docType
     })
 
     const handleCreate = async (e: React.FormEvent) => {
@@ -126,7 +117,7 @@ DATE: ${new Date().toLocaleDateString()}
                     status: 'draft',
                     clientId: clientId, // Backend should handle this or we send it
                     templateId: (creationMode === 'template' && templateId !== 'blank') ? templateId : undefined,
-                    documentType: DOCUMENT_TYPES.find(d => d.value === docType)?.label || docType
+                    documentType: masterData?.document_types.find(dt => dt.id === docType)?.name || docType
                 }
             })
 
@@ -224,9 +215,9 @@ DATE: ${new Date().toLocaleDateString()}
                                     <SelectValue placeholder="Select type..." />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {DOCUMENT_TYPES.map(type => (
-                                        <SelectItem key={type.value} value={type.value}>
-                                            {type.label}
+                                    {masterData?.document_types.map((dt) => (
+                                        <SelectItem key={dt.id} value={dt.id}>
+                                            {dt.name}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -248,7 +239,7 @@ DATE: ${new Date().toLocaleDateString()}
                                 </div>
                                 <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-slate-50 transition-colors w-1/2">
                                     <RadioGroupItem value="ai" id="mode-ai" />
-                                    <Label htmlFor="mode-ai" className="cursor-pointer font-normal">AI Instructions</Label>
+                                    <Label htmlFor="mode-ai" className="cursor-pointer font-normal">Generate Template with AI</Label>
                                 </div>
                             </RadioGroup>
                         </div>
@@ -262,12 +253,26 @@ DATE: ${new Date().toLocaleDateString()}
                                         <SelectValue placeholder="Select template..." />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="blank">Blank Document</SelectItem>
-                                        {filteredTemplates.map(t => (
-                                            <SelectItem key={t.templateId} value={t.templateId}>
-                                                {t.name}
-                                            </SelectItem>
-                                        ))}
+                                        {docType ? (
+                                            // If document type selected, show templates for that type + blank option
+                                            <>
+                                                {filteredTemplates.length > 0 ? (
+                                                    <>
+                                                        {filteredTemplates.map(t => (
+                                                            <SelectItem key={t.templateId} value={t.templateId}>
+                                                                {t.name}
+                                                            </SelectItem>
+                                                        ))}
+                                                        <SelectItem value="blank">Start Blank Document</SelectItem>
+                                                    </>
+                                                ) : (
+                                                    <SelectItem value="blank">No templates available - Start Blank Document</SelectItem>
+                                                )}
+                                            </>
+                                        ) : (
+                                            // If no document type selected, show blank as default
+                                            <SelectItem value="blank">Blank Document (select document type first)</SelectItem>
+                                        )}
                                     </SelectContent>
                                 </Select>
                             </div>
