@@ -15,11 +15,13 @@ interface Props {
     caseId: string
     caseType: string
     clientId: string
+    draftContent?: string  // Added draft content prop
+    documentType?: string  // Added document type prop
     onWorkflowComplete?: () => void
     onWorkflowProgress?: (content: string) => void
 }
 
-export function MultiAgentWorkflowManager({ caseId, caseType, clientId, onWorkflowComplete, onWorkflowProgress }: Props) {
+export function MultiAgentWorkflowManager({ caseId, caseType, clientId, draftContent, documentType, onWorkflowComplete, onWorkflowProgress }: Props) {
     const [threadId, setThreadId] = useState<string | null>(null)
     const [feedback, setFeedback] = useState('')
 
@@ -63,15 +65,26 @@ export function MultiAgentWorkflowManager({ caseId, caseType, clientId, onWorkfl
 
     const handleStart = async () => {
         try {
+            console.log('🔍 WORKFLOW START DEBUG:')
+            console.log('- caseId:', caseId)
+            console.log('- documentType:', documentType)
+            console.log('- draftContent length:', draftContent?.length || 0)
+            console.log('- draftContent preview:', draftContent?.substring(0, 200) + '...')
+
             const result = await startWorkflow.mutateAsync({
                 case_id: caseId,
-                case_type: caseType || 'general',
-                client_id: clientId || 'unknown'
+                document_type: documentType || 'General',  // Use document_type with fallback
+                client_id: clientId || 'unknown',
+                template_content: draftContent || '',  // Pass existing draft content as template
+                company_id: undefined  // Will be inferred from case
             })
+
+            console.log('✅ Workflow started with ID:', result.thread_id)
             setThreadId(result.thread_id)
             setHasTriggeredCompletion(false) // Reset for new run
             toast.success('Agent Workflow Started')
         } catch (e) {
+            console.error('❌ Workflow start failed:', e)
             toast.error('Failed to start workflow')
         }
     }
@@ -254,4 +267,3 @@ export function MultiAgentWorkflowManager({ caseId, caseType, clientId, onWorkfl
         </div>
     )
 }
-

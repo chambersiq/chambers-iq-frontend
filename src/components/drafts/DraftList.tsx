@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
     Table,
     TableBody,
@@ -44,6 +44,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { logger } from '@/lib/logger'
 
 interface DraftListProps {
     caseId?: string
@@ -60,17 +61,42 @@ export function DraftList({ caseId }: DraftListProps) {
     const [caseFilter, setCaseFilter] = useState<string>('all')
     const [clientFilter, setClientFilter] = useState<string>('all')
 
+    // Component lifecycle logging
+    useEffect(() => {
+        logger.logComponentMount('DraftList', { caseId, totalDrafts: drafts.length })
+        return () => {
+            logger.logComponentUnmount('DraftList')
+        }
+    }, [])
+
+    // Log when drafts data changes
+    useEffect(() => {
+        if (drafts.length > 0) {
+            logger.logUserAction('drafts_loaded', { count: drafts.length, caseId })
+        }
+    }, [drafts, caseId])
+
     const handleDelete = (draftId: string) => {
+        logger.logButtonClick('delete_draft', 'DraftList', { draftId })
         setDraftToDelete(draftId)
     }
 
     const confirmDelete = async () => {
         if (!draftToDelete) return
+
+        const draft = drafts.find(d => d.draftId === draftToDelete)
+        logger.logDraftingAction('delete_draft_confirmed', draft?.draftId, draft?.caseId, {
+            draftName: draft?.name,
+            caseName: draft?.caseName
+        })
+
         try {
             await deleteDraft(draftToDelete)
+            logger.logDraftingAction('delete_draft_success', draft?.draftId, draft?.caseId)
             toast.success("Draft deleted successfully")
             setDraftToDelete(null)
         } catch (err) {
+            logger.logError(err as Error, 'DraftList', { action: 'delete_draft', draftId: draftToDelete })
             console.error(err)
             toast.error("Failed to delete draft")
         }
@@ -152,13 +178,20 @@ export function DraftList({ caseId }: DraftListProps) {
                             placeholder="Search drafts..."
                             className="pl-8"
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e) => {
+                                const newValue = e.target.value
+                                setSearchTerm(newValue)
+                                logger.logFormSubmit('search_drafts', { searchTerm: newValue, caseId })
+                            }}
                         />
                     </div>
 
                     {!caseId && (
                         <>
-                            <Select value={caseFilter} onValueChange={setCaseFilter}>
+                            <Select value={caseFilter} onValueChange={(value) => {
+                                setCaseFilter(value)
+                                logger.logUserAction('filter_changed', { filterType: 'case', value, caseId })
+                            }}>
                                 <SelectTrigger className="w-[180px]">
                                     <SelectValue placeholder="Filter by Case" />
                                 </SelectTrigger>
@@ -170,7 +203,10 @@ export function DraftList({ caseId }: DraftListProps) {
                                 </SelectContent>
                             </Select>
 
-                            <Select value={clientFilter} onValueChange={setClientFilter}>
+                            <Select value={clientFilter} onValueChange={(value) => {
+                                setClientFilter(value)
+                                logger.logUserAction('filter_changed', { filterType: 'client', value, caseId })
+                            }}>
                                 <SelectTrigger className="w-[180px]">
                                     <SelectValue placeholder="Filter by Client" />
                                 </SelectTrigger>
@@ -184,7 +220,10 @@ export function DraftList({ caseId }: DraftListProps) {
                         </>
                     )}
 
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <Select value={statusFilter} onValueChange={(value) => {
+                        setStatusFilter(value)
+                        logger.logUserAction('filter_changed', { filterType: 'status', value, caseId })
+                    }}>
                         <SelectTrigger className="w-[150px]">
                             <SelectValue placeholder="Status" />
                         </SelectTrigger>

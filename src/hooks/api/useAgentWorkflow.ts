@@ -10,7 +10,7 @@ export interface WorkflowState {
 
 export function useStartWorkflow() {
     return useMutation({
-        mutationFn: async (payload: { case_id: string, case_type: string, client_id: string, template_id?: string }) => {
+        mutationFn: async (payload: { case_id: string, document_type: string, client_id: string, template_content?: string, company_id?: string }) => {
             const { data } = await api.post<WorkflowState>('/workflows/start', payload);
             return data;
         },

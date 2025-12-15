@@ -261,6 +261,8 @@ export function DraftEditor() {
                         caseId={draft?.caseId || 'demo-case'}
                         caseType={caseData ? (masterData?.case_types.find(t => t.id === caseData.caseTypeId)?.name || caseData.caseSubType || 'General') : 'General'}
                         clientId={draft?.clientId || 'demo-client'}
+                        draftContent={draft?.content || ''}  // Pass existing draft content as template
+                        documentType={draft?.documentType || 'General'}  // Pass document type
                         onWorkflowComplete={handleWorkflowComplete}
                         onWorkflowProgress={handleWorkflowProgress}
                     />
