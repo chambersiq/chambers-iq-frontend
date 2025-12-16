@@ -63,13 +63,60 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
             priority: normPri(initialData?.priority) as any || 'medium',
             feeArrangement: normFee(initialData?.feeArrangement),
             caseSummary: initialData?.caseSummary || '',
-            // Initialize other fields as needed, or let them be undefined
-            ...initialData,
-            opposingPartyType: normLower(initialData?.opposingPartyType) as any || 'individual',
-            // Override keyFacts in spread to ensure it's the string version
+            caseTypeId: initialData?.caseTypeId || '',
+            clientPosition: initialData?.clientPosition || '',
+            opposingPartyPosition: initialData?.opposingPartyPosition || '',
             keyFacts: Array.isArray(initialData?.keyFacts)
                 ? initialData.keyFacts.join('\n')
                 : (initialData?.keyFacts || ''),
+            legalIssues: initialData?.legalIssues || '',
+            prayer: initialData?.prayer || '',
+            caseStrategyNotes: initialData?.caseStrategyNotes || '',
+            opposingPartyType: normLower(initialData?.opposingPartyType) as any || 'individual',
+
+            // Court Details
+            courtLevelId: initialData?.courtLevelId || '',
+            practiceArea: initialData?.practiceArea || '',
+            courtName: initialData?.courtName || '',
+            docketNumber: initialData?.docketNumber || '',
+            judgeName: initialData?.judgeName || '',
+            department: initialData?.department || '',
+            venue: initialData?.venue || '',
+
+            // Parties
+            opposingPartyName: initialData?.opposingPartyName || '',
+            opposingCounselName: initialData?.opposingCounselName || '',
+            opposingCounselFirm: initialData?.opposingCounselFirm || '',
+            opposingCounselEmail: initialData?.opposingCounselEmail || '',
+            opposingCounselPhone: initialData?.opposingCounselPhone || '',
+            additionalParties: initialData?.additionalParties || [],
+
+            // Important Dates
+            statuteOfLimitationsDate: initialData?.statuteOfLimitationsDate || '',
+            caseFiledDate: initialData?.caseFiledDate || '',
+            nextHearingDate: initialData?.nextHearingDate || '',
+            trialDate: initialData?.trialDate || '',
+            discoveryCutoff: initialData?.discoveryCutoff || '',
+            mediationDate: initialData?.mediationDate || '',
+            settlementConferenceDate: initialData?.settlementConferenceDate || '',
+            customDeadlines: initialData?.customDeadlines || [],
+
+            // Financial
+            estimatedCaseValue: initialData?.estimatedCaseValue || undefined,
+            clientDamagesClaimed: initialData?.clientDamagesClaimed || undefined,
+            contingencyFeePercent: initialData?.contingencyFeePercent || undefined,
+            flatFeeAmount: initialData?.flatFeeAmount || undefined,
+            retainerAmount: initialData?.retainerAmount || undefined,
+
+            // Other
+            caseSubType: initialData?.caseSubType || '',
+            caseSource: initialData?.caseSource || '',
+            conflictCheckStatus: initialData?.conflictCheckStatus || '',
+            tags: initialData?.tags || [],
+            caseNotes: initialData?.caseNotes || '',
+            relatedCaseIds: initialData?.relatedCaseIds || [],
+            allowedDocTypeIds: initialData?.allowedDocTypeIds || [],
+            reliefIds: initialData?.reliefIds || [],
         } as any // Cast to any to avoid strict type checking on partial initialData
     })
 
@@ -87,7 +134,7 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
         }
 
         // Sanitize data globally
-        const { clientId, caseNumber, ...rest } = data
+        const { caseNumber, ...rest } = data
         const payload = {
             ...rest,
             // Only include caseNumber if it's not empty
@@ -247,6 +294,29 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
                         {masterData && (
                             <>
                                 <div className="space-y-2">
+                                    <Label htmlFor="courtLevelId" className={errors.courtLevelId ? "text-red-500" : ""}>Court Level *</Label>
+                                    <Controller
+                                        control={methods.control}
+                                        name="courtLevelId"
+                                        rules={{ required: "Court Level is required" }}
+                                        render={({ field }) => (
+                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                <SelectTrigger className={errors.courtLevelId ? "border-red-500 focus:ring-red-500" : ""}>
+                                                    <SelectValue placeholder="Select court level" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {masterData.court_levels.map((level) => (
+                                                        <SelectItem key={level.id} value={level.id}>
+                                                            {level.name} ({level.short_code})
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        )}
+                                    />
+                                    {errors.courtLevelId && <span className="text-xs text-red-500">{errors.courtLevelId.message}</span>}
+                                </div>
+                                <div className="space-y-2">
                                     <Label htmlFor="practiceArea">Practice Area (Indian Law)</Label>
                                     <Controller
                                         control={methods.control}
@@ -269,7 +339,7 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="caseTypeId">Specific Case Type</Label>
+                                    <Label htmlFor="caseTypeId">Specific Case Type *</Label>
                                     <Controller
                                         control={methods.control}
                                         name="caseTypeId"
@@ -318,13 +388,14 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
                                 )}
                             />
                         </div>
+
                     </CardContent>
                 </Card>
 
                 {/* Sections */}
+                <PartiesSection />
                 <CaseSummarySection />
                 <CourtDetailsSection />
-                <PartiesSection />
                 <ImportantDatesSection />
                 <FinancialSection />
 

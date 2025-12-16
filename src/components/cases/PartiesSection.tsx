@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Plus, Trash2 } from 'lucide-react'
 import { useFormContext, useFieldArray, Controller } from 'react-hook-form'
+import { useMasterData } from '@/contexts/MasterDataContext'
 
 export function PartiesSection() {
     const { register, control, setValue } = useFormContext()
@@ -14,6 +15,7 @@ export function PartiesSection() {
         control,
         name: 'additionalParties'
     })
+    const { data: masterData } = useMasterData()
 
     return (
         <Card>
@@ -87,7 +89,7 @@ export function PartiesSection() {
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() => append({ name: '', type: 'individual' })}
+                            onClick={() => append({ name: '', type: '', address: '' })}
                         >
                             <Plus className="mr-2 h-4 w-4" /> Add Party
                         </Button>
@@ -104,7 +106,7 @@ export function PartiesSection() {
                             >
                                 <Trash2 className="h-4 w-4" />
                             </Button>
-                            <div className="grid gap-4 md:grid-cols-2 pr-8">
+                            <div className="grid gap-4 md:grid-cols-3 pr-8">
                                 <div className="space-y-2">
                                     <Label>Name</Label>
                                     <Input placeholder="Party Name" {...register(`additionalParties.${index}.name`)} />
@@ -120,12 +122,19 @@ export function PartiesSection() {
                                                     <SelectValue placeholder="Select type" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="individual">Individual</SelectItem>
-                                                    <SelectItem value="company">Company</SelectItem>
+                                                    {masterData?.party_types?.map((partyType) => (
+                                                        <SelectItem key={partyType.id} value={partyType.id}>
+                                                            {partyType.name}
+                                                        </SelectItem>
+                                                    ))}
                                                 </SelectContent>
                                             </Select>
                                         )}
                                     />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Address</Label>
+                                    <Input placeholder="Party Address" {...register(`additionalParties.${index}.address`)} />
                                 </div>
                             </div>
                         </div>

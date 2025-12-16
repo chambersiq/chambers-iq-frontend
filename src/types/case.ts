@@ -21,7 +21,8 @@ export type FeeArrangement = 'hourly' | 'contingency' | 'flat-fee' | 'hybrid'
 
 export interface Party {
     name: string
-    type: 'individual' | 'company'
+    type: string
+    address?: string
     opposingCounselName?: string
     opposingCounselFirm?: string
     opposingCounselEmail?: string

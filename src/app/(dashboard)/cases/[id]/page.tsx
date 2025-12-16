@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Edit, FileText, Calendar, Users, DollarSign, ArrowRight, Plus } from 'lucide-react'
+import { Edit, FileText, Calendar, Users, DollarSign, ArrowRight, Plus, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { CaseDocumentView } from '@/components/documents/CaseDocumentView'
 import { Textarea } from '@/components/ui/textarea'
@@ -97,17 +97,24 @@ export default function CaseDetailPage({ params }: { params: { id: string } }) {
 
             {/* Header */}
             <div className="flex items-start justify-between">
-                <div>
-                    <div className="flex items-center gap-3">
-                        <h1 className="text-3xl font-bold text-slate-900">{caseData.caseName}</h1>
-                        <Badge variant={caseData.status === 'active' ? 'default' : 'secondary'} className="capitalize">
-                            {caseData.status}
-                        </Badge>
-                        <Badge variant="outline" className="capitalize">
-                            {masterData?.case_types.find(t => t.id === caseData.caseTypeId)?.name || caseData.caseSubType || 'General'}
-                        </Badge>
+                <div className="flex items-start gap-4">
+                    <Link href="/cases">
+                        <Button variant="ghost" size="icon">
+                            <ArrowLeft className="h-4 w-4" />
+                        </Button>
+                    </Link>
+                    <div>
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-3xl font-bold text-slate-900">{caseData.caseName}</h1>
+                            <Badge variant={caseData.status === 'active' ? 'default' : 'secondary'} className="capitalize">
+                                {caseData.status}
+                            </Badge>
+                            <Badge variant="outline" className="capitalize">
+                                {masterData?.case_types.find(t => t.id === caseData.caseTypeId)?.name || caseData.caseSubType || 'General'}
+                            </Badge>
+                        </div>
+                        <p className="mt-2 text-slate-600">Case #{caseData.caseNumber} • Client: {caseData.clientName}</p>
                     </div>
-                    <p className="mt-2 text-slate-600">Case #{caseData.caseNumber} • Client: {caseData.clientName}</p>
                 </div>
                 <div className="flex gap-3">
                     <Link href={`/cases/${params.id}/edit`}>
