@@ -113,7 +113,7 @@ export default function CaseDetailPage({ params }: { params: { id: string } }) {
                                 {masterData?.case_types.find(t => t.id === caseData.caseTypeId)?.name || caseData.caseSubType || 'General'}
                             </Badge>
                         </div>
-                        <p className="mt-2 text-slate-600">Case #{caseData.caseNumber} • Client: {caseData.clientName}</p>
+                        <p className="mt-2 text-slate-600">System Case : {caseData.caseNumber} • Client: {caseData.clientName}</p>
                     </div>
                 </div>
                 <div className="flex gap-3">
@@ -190,10 +190,6 @@ export default function CaseDetailPage({ params }: { params: { id: string } }) {
                             {/* Court Information */}
                             <div className="mt-6 pt-6 border-t grid gap-4 md:grid-cols-3 text-sm">
                                 <div>
-                                    <span className="font-semibold text-slate-900 block">Jurisdiction</span>
-                                    <span className="text-slate-600 capitalize">{caseData.jurisdiction || '-'}</span>
-                                </div>
-                                <div>
                                     <span className="font-semibold text-slate-900 block">Court Name</span>
                                     <span className="text-slate-600">{caseData.courtName || '-'}</span>
                                 </div>
@@ -202,7 +198,7 @@ export default function CaseDetailPage({ params }: { params: { id: string } }) {
                                     <span className="text-slate-600">{caseData.judgeName || '-'}</span>
                                 </div>
                                 <div>
-                                    <span className="font-semibold text-slate-900 block">Docket #</span>
+                                    <span className="font-semibold text-slate-900 block">Case number</span>
                                     <span className="text-slate-600">{caseData.docketNumber || '-'}</span>
                                 </div>
                                 <div>

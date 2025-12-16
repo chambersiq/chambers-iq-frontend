@@ -39,7 +39,7 @@ export function CourtDetailsSection() {
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="docketNumber">Docket / Case Number</Label>
+                        <Label htmlFor="docketNumber">Case Number</Label>
                         <Input
                             id="docketNumber"
                             placeholder="e.g. WP(C) 1234/2024"

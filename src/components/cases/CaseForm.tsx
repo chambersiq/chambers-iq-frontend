@@ -215,11 +215,13 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
 
                         {isEditing && (
                             <div className="space-y-2">
-                                <Label htmlFor="caseNumber">Case Number</Label>
+                                <Label htmlFor="caseNumber">System Case number</Label>
                                 <Input
                                     id="caseNumber"
-                                    placeholder="Auto-generated if empty"
+                                    placeholder="Auto-generated system reference"
                                     {...register('caseNumber')}
+                                    disabled={true}
+                                    className="bg-gray-50 cursor-not-allowed"
                                 />
                             </div>
                         )}
