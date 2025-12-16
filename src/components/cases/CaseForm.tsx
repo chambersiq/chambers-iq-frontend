@@ -195,38 +195,38 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
 
     return (
         <FormProvider {...methods}>
-            <form onSubmit={handleSubmit(onSubmit, (errors) => console.error("Form validation errors:", errors))} className="space-y-8">
+            <form onSubmit={handleSubmit(onSubmit, (errors) => console.error("Form validation errors:", errors))} className="space-y-6">
                 {/* Basic Info */}
                 <Card>
-                    <CardHeader>
-                        <CardTitle>Case Information</CardTitle>
+                    <CardHeader className="py-3 px-4">
+                        <CardTitle className="text-base">Case Information</CardTitle>
                     </CardHeader>
-                    <CardContent className="grid gap-6 md:grid-cols-2">
-                        <div className="space-y-2">
+                    <CardContent className="grid gap-4 md:grid-cols-2 px-4 pb-4">
+                        <div className="space-y-1.5">
                             <Label htmlFor="caseName" className={errors.caseName ? "text-red-500" : ""}>Case Name *</Label>
                             <Input
                                 id="caseName"
                                 placeholder="e.g. Sharma vs State of Maharashtra"
-                                className={errors.caseName ? "border-red-500 focus-visible:ring-red-500" : ""}
+                                className={`h-9 ${errors.caseName ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                                 {...register('caseName', { required: "Case Name is required" })}
                             />
                             {errors.caseName && <span className="text-xs text-red-500">{errors.caseName.message}</span>}
                         </div>
 
                         {isEditing && (
-                            <div className="space-y-2">
+                            <div className="space-y-1.5">
                                 <Label htmlFor="caseNumber">System Case number</Label>
                                 <Input
                                     id="caseNumber"
                                     placeholder="Auto-generated system reference"
                                     {...register('caseNumber')}
                                     disabled={true}
-                                    className="bg-gray-50 cursor-not-allowed"
+                                    className="bg-gray-50 cursor-not-allowed h-9"
                                 />
                             </div>
                         )}
 
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                             <Label htmlFor="client" className={errors.clientId ? "text-red-500" : ""}>Client *</Label>
                             <Controller
                                 control={methods.control}
@@ -237,7 +237,7 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
                                         onValueChange={field.onChange}
                                         value={field.value}
                                     >
-                                        <SelectTrigger className={errors.clientId ? "border-red-500 focus:ring-red-500" : ""}>
+                                        <SelectTrigger className={`h-9 ${errors.clientId ? "border-red-500 focus:ring-red-500" : ""}`}>
                                             <SelectValue placeholder="Select client" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -263,7 +263,7 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
                             />
                             {errors.clientId && <span className="text-xs text-red-500">{errors.clientId.message}</span>}
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                             <Label htmlFor="status">Status</Label>
                             <Controller
                                 control={methods.control}
@@ -273,7 +273,7 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
                                         onValueChange={field.onChange}
                                         value={field.value}
                                     >
-                                        <SelectTrigger>
+                                        <SelectTrigger className="h-9">
                                             <SelectValue placeholder="Select status" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -295,7 +295,7 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
                         {/* Phase 2: Indian Law Categorization */}
                         {masterData && (
                             <>
-                                <div className="space-y-2">
+                                <div className="space-y-1.5">
                                     <Label htmlFor="courtLevelId" className={errors.courtLevelId ? "text-red-500" : ""}>Court Level *</Label>
                                     <Controller
                                         control={methods.control}
@@ -303,7 +303,7 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
                                         rules={{ required: "Court Level is required" }}
                                         render={({ field }) => (
                                             <Select onValueChange={field.onChange} value={field.value}>
-                                                <SelectTrigger className={errors.courtLevelId ? "border-red-500 focus:ring-red-500" : ""}>
+                                                <SelectTrigger className={`h-9 ${errors.courtLevelId ? "border-red-500 focus:ring-red-500" : ""}`}>
                                                     <SelectValue placeholder="Select court level" />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -318,7 +318,7 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
                                     />
                                     {errors.courtLevelId && <span className="text-xs text-red-500">{errors.courtLevelId.message}</span>}
                                 </div>
-                                <div className="space-y-2">
+                                <div className="space-y-1.5">
                                     <Label htmlFor="practiceArea">Practice Area (Indian Law)</Label>
                                     <Controller
                                         control={methods.control}
@@ -327,7 +327,7 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
                                             const areas = Array.from(new Set(masterData.case_types.map(ct => ct.practice_area)));
                                             return (
                                                 <Select onValueChange={field.onChange} value={field.value}>
-                                                    <SelectTrigger>
+                                                    <SelectTrigger className="h-9">
                                                         <SelectValue placeholder="Select practice area" />
                                                     </SelectTrigger>
                                                     <SelectContent>
@@ -340,7 +340,7 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
                                         }}
                                     />
                                 </div>
-                                <div className="space-y-2">
+                                <div className="space-y-1.5">
                                     <Label htmlFor="caseTypeId">Specific Case Type *</Label>
                                     <Controller
                                         control={methods.control}
@@ -351,7 +351,7 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
                                             const types = masterData.case_types.filter(ct => !selectedArea || ct.practice_area === selectedArea);
                                             return (
                                                 <Select onValueChange={field.onChange} value={field.value}>
-                                                    <SelectTrigger>
+                                                    <SelectTrigger className="h-9">
                                                         <SelectValue placeholder="Select specific type" />
                                                     </SelectTrigger>
                                                     <SelectContent>
@@ -367,7 +367,7 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
                             </>
                         )}
 
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                             <Label htmlFor="priority">Priority</Label>
                             <Controller
                                 control={methods.control}
@@ -377,7 +377,7 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
                                         onValueChange={field.onChange}
                                         value={field.value}
                                     >
-                                        <SelectTrigger>
+                                        <SelectTrigger className="h-9">
                                             <SelectValue placeholder="Select priority" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -402,11 +402,11 @@ export function CaseForm({ initialData, isEditing = false }: CaseFormProps) {
                 <FinancialSection />
 
                 {/* Actions */}
-                <div className="flex items-center justify-end gap-4 sticky bottom-6 bg-white p-4 border rounded-lg shadow-lg">
-                    <Button type="button" variant="outline" onClick={() => router.back()}>
+                <div className="flex items-center justify-end gap-3 sticky bottom-6 bg-white p-3 border rounded-lg shadow-lg">
+                    <Button type="button" variant="outline" size="sm" onClick={() => router.back()}>
                         Cancel
                     </Button>
-                    <Button type="submit" size="lg" disabled={createCase.isPending || updateCase.isPending}>
+                    <Button type="submit" size="sm" disabled={createCase.isPending || updateCase.isPending}>
                         {createCase.isPending || updateCase.isPending ? 'Saving...' : (isEditing ? 'Update Case' : 'Create Case')}
                     </Button>
                 </div>

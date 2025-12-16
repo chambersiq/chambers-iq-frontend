@@ -208,18 +208,18 @@ export default function HelpPage() {
     })
 
     return (
-        <div className="max-w-5xl mx-auto pb-20 space-y-10">
+        <div className="max-w-5xl mx-auto pb-20 space-y-6">
 
             {/* 1. Hero Search Section */}
-            <div className="text-center space-y-6 py-10">
-                <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">
+            <div className="text-center space-y-4 py-6">
+                <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
                     How can we help you?
                 </h1>
                 <div className="relative max-w-xl mx-auto">
                     <Search className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
                     <Input
                         placeholder="Search for answers (e.g., 'create case', 'AI drafting')"
-                        className="pl-12 h-12 text-lg shadow-sm border-slate-200 rounded-full"
+                        className="pl-12 h-12 text-base shadow-sm border-slate-200 rounded-full"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -227,7 +227,7 @@ export default function HelpPage() {
             </div>
 
             {/* 2. Category Grid (Interactive) */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 {CATEGORIES.map((cat) => {
                     const Icon = cat.icon
                     const isActive = activeCategory === cat.id
@@ -236,19 +236,19 @@ export default function HelpPage() {
                             key={cat.id}
                             onClick={() => setActiveCategory(isActive ? 'all' : cat.id)}
                             className={`
-                                cursor-pointer rounded-xl border p-4 transition-all duration-200 text-center space-y-2 group
+                                cursor-pointer rounded-xl border p-3 transition-all duration-200 text-center space-y-2 group
                                 ${isActive
                                     ? 'bg-blue-50 border-blue-200 shadow-md transform scale-105'
                                     : 'bg-white border-slate-200 hover:border-blue-300 hover:shadow-sm'
                                 }
                             `}
                         >
-                            <div className={`mx-auto p-3 rounded-full w-fit transition-colors ${isActive ? 'bg-blue-100 text-blue-700' : 'bg-slate-50 text-slate-600 group-hover:bg-blue-50 group-hover:text-blue-600'}`}>
-                                <Icon className="h-6 w-6" />
+                            <div className={`mx-auto p-2.5 rounded-full w-fit transition-colors ${isActive ? 'bg-blue-100 text-blue-700' : 'bg-slate-50 text-slate-600 group-hover:bg-blue-50 group-hover:text-blue-600'}`}>
+                                <Icon className="h-5 w-5" />
                             </div>
                             <div>
-                                <div className={`font-semibold ${isActive ? 'text-blue-900' : 'text-slate-900'}`}>{cat.label}</div>
-                                <div className="text-xs text-slate-500 hidden md:block">{cat.desc}</div>
+                                <div className={`font-semibold text-sm ${isActive ? 'text-blue-900' : 'text-slate-900'}`}>{cat.label}</div>
+                                <div className="text-[10px] text-slate-500 hidden md:block">{cat.desc}</div>
                             </div>
                         </div>
                     )
@@ -256,9 +256,9 @@ export default function HelpPage() {
             </div>
 
             {/* 3. FAQ List (Rich Content) */}
-            <div className="space-y-6">
+            <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-2xl font-bold text-slate-900">
+                    <h2 className="text-xl font-bold text-slate-900">
                         {searchQuery ? `Search Results` : (activeCategory === 'all' ? 'Popular Questions' : CATEGORIES.find(c => c.id === activeCategory)?.label)}
                     </h2>
                     {activeCategory !== 'all' && (
@@ -268,23 +268,23 @@ export default function HelpPage() {
                     )}
                 </div>
 
-                <Accordion type="single" collapsible className="space-y-4">
+                <Accordion type="single" collapsible className="space-y-3">
                     {filteredItems.length > 0 ? (
                         filteredItems.map((item) => (
                             <div key={item.id} className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm hover:shadow transition-shadow">
                                 <AccordionItem value={item.id} className="border-none">
-                                    <AccordionTrigger className="px-6 py-4 hover:no-underline lg:text-lg font-semibold text-slate-800">
+                                    <AccordionTrigger className="px-5 py-3.5 hover:no-underline text-base font-semibold text-slate-800">
                                         {item.question}
                                     </AccordionTrigger>
-                                    <AccordionContent className="px-6 pb-6 text-slate-600 text-base leading-relaxed bg-slate-50/50 pt-4 border-t border-slate-100">
+                                    <AccordionContent className="px-5 pb-5 text-slate-600 text-sm leading-relaxed bg-slate-50/50 pt-3 border-t border-slate-100">
                                         {item.answer}
                                     </AccordionContent>
                                 </AccordionItem>
                             </div>
                         ))
                     ) : (
-                        <div className="text-center py-12 text-slate-500">
-                            <p className="text-lg">No answers found matching "{searchQuery}"</p>
+                        <div className="text-center py-10 text-slate-500">
+                            <p className="text-base">No answers found matching "{searchQuery}"</p>
                             <Button variant="link" onClick={() => setSearchQuery('')}>Clear Search</Button>
                         </div>
                     )}
@@ -292,7 +292,7 @@ export default function HelpPage() {
             </div>
 
             {/* 4. Footer / Contact */}
-            <div className="border-t border-slate-200 pt-10 mt-10">
+            <div className="border-t border-slate-200 pt-6 mt-6">
                 <div className="bg-slate-900 rounded-2xl p-8 md:p-12 text-center md:text-left flex flex-col md:flex-row items-center justify-between gap-8 text-white">
                     <div className="space-y-2">
                         <h3 className="text-2xl font-bold">Still need help?</h3>

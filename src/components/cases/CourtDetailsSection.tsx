@@ -20,58 +20,63 @@ export function CourtDetailsSection() {
             <CardHeader>
                 <CardTitle>Court & Filing Details</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4">
                 {/* Display selected Court Level */}
-                <div className="p-3 bg-blue-50 rounded-lg border">
-                    <Label className="text-sm font-medium text-blue-800">Court Level</Label>
-                    <p className="text-blue-600 font-medium">
+                <div className="p-2.5 bg-blue-50 rounded-lg border">
+                    <Label className="text-xs font-semibold text-blue-800 uppercase tracking-wide">Court Level</Label>
+                    <p className="text-blue-700 font-medium text-sm mt-0.5">
                         {selectedCourtLevel ? `${selectedCourtLevel.name} (${selectedCourtLevel.short_code})` : 'Not selected'}
                     </p>
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-2">
-                    <div className="space-y-2">
+                <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-1.5">
                         <Label htmlFor="courtName">Court Name</Label>
                         <Input
                             id="courtName"
+                            className="h-9"
                             placeholder="e.g. High Court of Delhi"
                             {...register('courtName')}
                         />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                         <Label htmlFor="docketNumber">Case Number</Label>
                         <Input
                             id="docketNumber"
+                            className="h-9"
                             placeholder="e.g. WP(C) 1234/2024"
                             {...register('docketNumber')}
                         />
                     </div>
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-2">
-                    <div className="space-y-2">
+                <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-1.5">
                         <Label htmlFor="judgeName">Judge Name</Label>
                         <Input
                             id="judgeName"
+                            className="h-9"
                             placeholder="Hon'ble Justice ..."
                             {...register('judgeName')}
                         />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                         <Label htmlFor="department">Department / Bench</Label>
                         <Input
                             id="department"
+                            className="h-9"
                             placeholder="e.g. Family Court Bench 1"
                             {...register('department')}
                         />
                     </div>
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-2">
-                    <div className="space-y-2">
+                <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-1.5">
                         <Label htmlFor="venue">Venue</Label>
                         <Input
                             id="venue"
+                            className="h-9"
                             placeholder="e.g. Room 404"
                             {...register('venue')}
                         />
