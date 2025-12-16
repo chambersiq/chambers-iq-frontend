@@ -73,6 +73,7 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
 
     // Form State - Required Indian Law Categorization
     const [title, setTitle] = useState('')
+    const [selectedMainCategory, setSelectedMainCategory] = useState('')
     const [documentTypeId, setDocumentTypeId] = useState('')
     const [summary, setSummary] = useState('')
     const [aiGenerate, setAiGenerate] = useState(false)
@@ -138,16 +139,14 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
             return
         }
 
-        // Get document type details from master data
-        const selectedDocType = masterData?.document_types.find(dt => dt.id === documentTypeId)
-        if (!selectedDocType) return
-
+        // For supporting documents, we use the subcategory ID as documentTypeId
+        // and a generic supporting document category
         const newItems: QueueItem[] = selectedFiles.map((file, index) => ({
             id: Math.random().toString(36).substring(7),
             file: file,
             title: selectedFiles.length > 1 ? `${title} (${index + 1})` : title,
-            documentTypeId: documentTypeId,
-            documentCategoryId: selectedDocType.category_id,
+            documentTypeId: documentTypeId, // This is now the supporting document subcategory ID
+            documentCategoryId: 'SCAT_SUPPORTING', // Generic supporting document category
             courtLevelId: caseData.courtLevelId || 'CL_DC', // Default to district court
             parentCaseTypeId: caseData.caseTypeId || '',
             summary,
@@ -159,6 +158,7 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
 
         // Reset Form and validation state
         setTitle('')
+        setSelectedMainCategory('')
         setDocumentTypeId('')
         setSummary('')
         setSelectedFiles([])
@@ -305,21 +305,52 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
 
                         {/* 1. Metadata Fields */}
                         <div className="space-y-4">
+                            {/* Main Category Dropdown */}
+                            <div className="space-y-2">
+                                <Label>Main Category <span className="text-red-500">*</span></Label>
+                                <Select
+                                    value={selectedMainCategory}
+                                    onValueChange={(value) => {
+                                        setSelectedMainCategory(value)
+                                        setDocumentTypeId('') // Clear subcategory when main category changes
+                                    }}
+                                >
+                                    <SelectTrigger className={showValidation && !selectedMainCategory ? "border-red-500" : ""}>
+                                        <SelectValue placeholder="Select main category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {masterData?.supporting_document_categories?.map((category) => (
+                                            <SelectItem key={category.id} value={category.id}>
+                                                {category.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {showValidation && !selectedMainCategory && (
+                                    <p className="text-xs text-red-600">Main category is required</p>
+                                )}
+                            </div>
+
+                            {/* Subcategory Dropdown */}
                             <div className="space-y-2">
                                 <Label>Document Type <span className="text-red-500">*</span></Label>
                                 <Select
                                     value={documentTypeId}
                                     onValueChange={setDocumentTypeId}
+                                    disabled={!selectedMainCategory}
                                 >
-                                    <SelectTrigger className={!documentTypeId ? "border-red-500" : ""}>
-                                        <SelectValue placeholder="Select document type" />
+                                    <SelectTrigger className={showValidation && !documentTypeId ? "border-red-500" : ""}>
+                                        <SelectValue placeholder={selectedMainCategory ? "Select document type" : "Select main category first"} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {masterData?.document_types.map((dt) => (
-                                            <SelectItem key={dt.id} value={dt.id}>
-                                                {dt.name}
-                                            </SelectItem>
-                                        ))}
+                                        {(() => {
+                                            const selectedCategory = masterData?.supporting_document_categories?.find(cat => cat.id === selectedMainCategory)
+                                            return selectedCategory?.subcategories?.map((sub) => (
+                                                <SelectItem key={sub.id} value={sub.id}>
+                                                    {sub.name}
+                                                </SelectItem>
+                                            )) || []
+                                        })()}
                                     </SelectContent>
                                 </Select>
                                 {showValidation && !documentTypeId && (
@@ -466,7 +497,16 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
                                                     <h4 className="font-semibold text-slate-900 truncate">{item.title}</h4>
                                                     <div className="flex items-center gap-2 mt-1">
                                                         <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-800">
-                                                            {masterData?.document_types.find(dt => dt.id === item.documentTypeId)?.name || item.documentTypeId}
+                                                            {(() => {
+                                                                // Find the supporting document subcategory name
+                                                                for (const category of masterData?.supporting_document_categories || []) {
+                                                                    const subcategory = category.subcategories.find(sub => sub.id === item.documentTypeId);
+                                                                    if (subcategory) {
+                                                                        return `${category.name} - ${subcategory.name}`;
+                                                                    }
+                                                                }
+                                                                return item.documentTypeId; // Fallback
+                                                            })()}
                                                         </span>
                                                         <span className="text-xs text-slate-500">
                                                             {item.file.name} ({(item.file.size / 1024 / 1024).toFixed(2)} MB)

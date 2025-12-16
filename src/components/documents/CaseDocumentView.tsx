@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { useDocuments, useDeleteDocument } from '@/hooks/api/useDocuments'
 import { useAuth } from '@/hooks/useAuth'
+import { useMasterData } from '@/contexts/MasterDataContext'
 
 // --- Helper Component for Inline Expandable Text ---
 // --- Helper Component for Inline Expandable Text ---
@@ -96,13 +97,43 @@ export function CaseDocumentView({ caseId, caseName, readOnly = false, hideHeade
     const { user } = useAuth()
     const companyId = user?.companyId || ''
     const { data: documents = [], isLoading } = useDocuments(companyId, caseId)
+    const { data: masterData } = useMasterData()
 
-    // Group documents by type
+    // Resolve document category names
+    const resolveDocumentCategory = (documentTypeId: string): string => {
+        if (!masterData) return documentTypeId
+
+        // Check supporting documents first
+        for (const category of masterData.supporting_document_categories || []) {
+            const subcategory = category.subcategories.find(sub => sub.id === documentTypeId)
+            if (subcategory) {
+                return `${category.name} - ${subcategory.name}`
+            }
+        }
+
+        // Check legal documents
+        const legalDoc = masterData.document_types?.find(dt => dt.id === documentTypeId)
+        if (legalDoc) {
+            return legalDoc.name
+        }
+
+        return documentTypeId // Fallback
+    }
+
+    // Group documents by main category (part before dash)
     const groupedDocs = documents.reduce((acc, doc) => {
-        if (!acc[doc.type]) acc[doc.type] = []
-        acc[doc.type].push(doc)
+        const fullCategory = resolveDocumentCategory(doc.documentTypeId)
+        const mainCategory = fullCategory.split(' - ')[0] // Get part before dash
+        if (!acc[mainCategory]) acc[mainCategory] = []
+        acc[mainCategory].push({ ...doc, resolvedCategory: fullCategory })
         return acc
-    }, {} as Record<DocumentType, Document[]>)
+    }, {} as Record<string, (Document & { resolvedCategory: string })[]>)
+
+    // Helper function to get subcategory (part after dash)
+    const getSubcategory = (fullCategory: string): string => {
+        const parts = fullCategory.split(' - ')
+        return parts.length > 1 ? parts.slice(1).join(' - ') : fullCategory
+    }
 
     const deleteDocument = useDeleteDocument(companyId)
 
@@ -188,7 +219,14 @@ export function CaseDocumentView({ caseId, caseName, readOnly = false, hideHeade
                                                 </div>
                                             </div>
 
-                                            {/* Section 2: Unified Summary */}
+                                            {/* Section 2: Subcategory (Fixed Width) */}
+                                            <div className="w-[200px] shrink-0 border-l pl-4 border-slate-200">
+                                                <Badge variant="outline" className="text-xs">
+                                                    {getSubcategory(doc.resolvedCategory)}
+                                                </Badge>
+                                            </div>
+
+                                            {/* Section 3: Unified Summary */}
                                             <div className="flex-1 min-w-0 border-l pl-4 border-slate-200 h-full">
                                                 {doc.description ? (
                                                     <InlineExpandableText

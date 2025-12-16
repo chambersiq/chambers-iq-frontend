@@ -26,6 +26,21 @@ export interface DocumentType {
     category_id: string;
 }
 
+export interface SupportingDocumentSubcategory {
+    id: string;
+    name: string;
+    accepts: string[];
+}
+
+export interface SupportingDocumentCategory {
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+    color: string;
+    subcategories: SupportingDocumentSubcategory[];
+}
+
 export interface PartyType {
     id: string;
     name: string;
@@ -52,6 +67,7 @@ export interface MasterData {
     case_types: CaseType[];
     document_categories: DocumentCategory[];
     document_types: DocumentType[];
+    supporting_document_categories: SupportingDocumentCategory[];
     party_types: PartyType[];
     statutes: Statute[];
     relief_types: ReliefType[];
