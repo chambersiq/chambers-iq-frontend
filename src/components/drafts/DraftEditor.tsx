@@ -14,6 +14,9 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import UnderlineExtension from '@tiptap/extension-underline'
 import { TextAlign } from '@tiptap/extension-text-align'
+import BulletList from '@tiptap/extension-bullet-list'
+import OrderedList from '@tiptap/extension-ordered-list'
+import ListItem from '@tiptap/extension-list-item'
 
 import { useUpdateDraft, useDraft } from '@/hooks/api/useDrafts'
 import { useParams } from 'next/navigation'
@@ -45,7 +48,15 @@ export function DraftEditor() {
 
     const editor = useEditor({
         extensions: [
-            StarterKit,
+            StarterKit.configure({
+                // Allow all heading levels
+                heading: {
+                    levels: [1, 2, 3, 4, 5, 6],
+                },
+            }),
+            BulletList,
+            OrderedList,
+            ListItem,
             UnderlineExtension,
             TextAlign.configure({
                 types: ['heading', 'paragraph'],
@@ -55,7 +66,7 @@ export function DraftEditor() {
         immediatelyRender: false,
         editorProps: {
             attributes: {
-                class: 'w-full focus:outline-none focus-visible:ring-0 p-8 text-base leading-relaxed font-serif prose prose-slate max-w-none w-full break-words whitespace-normal print:p-0 print:border-none print:shadow-none',
+                class: 'w-full focus:outline-none focus-visible:ring-0 p-8 text-base leading-relaxed font-serif prose prose-slate max-w-none w-full break-words whitespace-normal [&_hr]:border-t [&_hr]:border-gray-300 [&_hr]:my-4 [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6 [&_li]:mb-1 print:p-0 print:border-none print:shadow-none',
             },
         },
         onUpdate: ({ editor }) => {
@@ -240,9 +251,65 @@ export function DraftEditor() {
                             <Underline className="h-4 w-4" />
                         </Button>
                         <div className="w-px h-6 bg-border mx-2" />
-                        <Button variant="ghost" size="icon" className="h-8 w-8"><AlignLeft className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8"><AlignCenter className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8"><AlignRight className="h-4 w-4" /></Button>
+                        <Button
+                            variant={editor.isActive({ textAlign: 'left' }) ? 'secondary' : 'ghost'}
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => editor.chain().focus().setTextAlign('left').run()}
+                        >
+                            <AlignLeft className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant={editor.isActive({ textAlign: 'center' }) ? 'secondary' : 'ghost'}
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => editor.chain().focus().setTextAlign('center').run()}
+                        >
+                            <AlignCenter className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant={editor.isActive({ textAlign: 'right' }) ? 'secondary' : 'ghost'}
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => editor.chain().focus().setTextAlign('right').run()}
+                        >
+                            <AlignRight className="h-4 w-4" />
+                        </Button>
+                        <div className="w-px h-6 bg-border mx-2" />
+                        <Button
+                            variant={editor.isActive('bulletList') ? 'secondary' : 'ghost'}
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => {
+                                console.log('Bullet list button clicked')
+                                console.log('Can toggleBulletList:', editor.can().toggleBulletList())
+                                console.log('Is active bulletList:', editor.isActive('bulletList'))
+
+                                if (editor.can().toggleBulletList()) {
+                                    editor.chain().focus().toggleBulletList().run()
+                                } else {
+                                    console.log('Cannot toggle bullet list, trying alternative...')
+                                    // Try alternative: wrap in bullet list
+                                    editor.chain().focus().wrapInList('bulletList').run()
+                                }
+                            }}
+                        >
+                            <List className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant={editor.isActive('orderedList') ? 'secondary' : 'ghost'}
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => {
+                                console.log('Ordered list button clicked')
+                                console.log('Can toggleOrderedList:', editor.can().toggleOrderedList())
+                                console.log('Is active orderedList:', editor.isActive('orderedList'))
+                                editor.chain().focus().toggleOrderedList().run()
+                            }}
+                            title="Numbered List"
+                        >
+                            <span className="text-xs font-bold">1.</span>
+                        </Button>
                     </div>
 
                     {/* Document Page */}
