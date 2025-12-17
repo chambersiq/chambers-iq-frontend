@@ -1,9 +1,14 @@
 'use client'
 
-import { useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, List, Code } from 'lucide-react'
+import { useEditor, EditorContent } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import UnderlineExtension from '@tiptap/extension-underline'
+import { TextAlign } from '@tiptap/extension-text-align'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
-import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, List } from 'lucide-react'
 
 interface TemplateEditorProps {
     value?: string
@@ -11,91 +16,172 @@ interface TemplateEditorProps {
 }
 
 export function TemplateEditor({ value = '', onChange }: TemplateEditorProps) {
-    const textareaRef = useRef<HTMLTextAreaElement>(null)
+    const [htmlImport, setHtmlImport] = useState('')
+    const [showImportDialog, setShowImportDialog] = useState(false)
 
-    const handleFormat = (format: 'bold' | 'italic' | 'underline' | 'list') => {
-        if (!textareaRef.current) return
+    const editor = useEditor({
+        extensions: [
+            StarterKit.configure({
+                // Allow all heading levels
+                heading: {
+                    levels: [1, 2, 3, 4, 5, 6],
+                },
+                // Explicitly ensure list functionality
+                bulletList: {},
+                orderedList: {},
+                listItem: {},
+            }),
+            UnderlineExtension,
+            TextAlign.configure({
+                types: ['heading', 'paragraph'],
+            }),
+        ],
+        content: value,
+        immediatelyRender: false,
+        parseOptions: {
+            preserveWhitespace: false,
+        },
+        editorProps: {
+            attributes: {
+                class: 'w-full focus:outline-none focus-visible:ring-0 p-6 text-base leading-relaxed font-serif prose prose-slate max-w-none w-full break-words whitespace-normal [&_hr]:border-t [&_hr]:border-gray-300 [&_hr]:my-4',
+            },
+            handlePaste: (view, event, slice) => {
+                // Allow HTML paste to be parsed correctly
+                const html = event.clipboardData?.getData('text/html')
+                if (html && editor) {
+                    // Convert uppercase HTML tags to lowercase
+                    const normalizedHtml = html.replace(/<\/?([A-Z][A-Z0-9]*)\b[^>]*>/gi, (match, tagName) => {
+                        return match.replace(tagName, tagName.toLowerCase())
+                    })
+                    // Insert the normalized HTML
+                    editor.commands.insertContent(normalizedHtml)
+                    return true
+                }
+                return false
+            },
+        },
+        onUpdate: ({ editor }) => {
+            onChange?.(editor.getHTML())
+        },
+    })
 
-        const start = textareaRef.current.selectionStart
-        const end = textareaRef.current.selectionEnd
-        const text = value
-
-        let prefix = ''
-        let suffix = ''
-
-        switch (format) {
-            case 'bold':
-                prefix = '**'
-                suffix = '**'
-                break
-            case 'italic':
-                prefix = '*'
-                suffix = '*'
-                break
-            case 'underline':
-                prefix = '__'
-                suffix = '__'
-                break
-            case 'list':
-                prefix = '\n- '
-                suffix = ''
-                break
+    // Sync external value changes
+    useEffect(() => {
+        if (editor && value !== editor.getHTML()) {
+            // Set content - TipTap will automatically parse HTML
+            editor.commands.setContent(value)
         }
+    }, [value, editor])
 
-        const newText = text.substring(0, start) + prefix + text.substring(start, end) + suffix + text.substring(end)
-
-        onChange?.(newText)
-
-        // Restore focus and selection
-        setTimeout(() => {
-            if (textareaRef.current) {
-                textareaRef.current.focus()
-                textareaRef.current.setSelectionRange(
-                    start + prefix.length,
-                    end + prefix.length
-                )
-            }
-        }, 0)
+    if (!editor) {
+        return <div className="p-8">Loading editor...</div>
     }
 
     return (
         <div className="flex flex-col h-full border rounded-md shadow-sm bg-white overflow-hidden focus-within:ring-1 focus-within:ring-ring">
             {/* Toolbar */}
             <div className="flex items-center gap-1 p-2 border-b bg-slate-50">
-                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-200" onClick={() => handleFormat('bold')}>
+                <Button
+                    variant={editor.isActive('bold') ? 'secondary' : 'ghost'}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => editor.chain().focus().toggleBold().run()}
+                >
                     <Bold className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-200" onClick={() => handleFormat('italic')}>
+                <Button
+                    variant={editor.isActive('italic') ? 'secondary' : 'ghost'}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => editor.chain().focus().toggleItalic().run()}
+                >
                     <Italic className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-200" onClick={() => handleFormat('underline')}>
+                <Button
+                    variant={editor.isActive('underline') ? 'secondary' : 'ghost'}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => editor.chain().focus().toggleUnderline().run()}
+                >
                     <Underline className="h-4 w-4" />
                 </Button>
                 <div className="w-px h-6 bg-border mx-2" />
-                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-200" disabled title="Not supported in plain text">
-                    <AlignLeft className="h-4 w-4 text-muted-foreground" />
+                <Button
+                    variant={editor.isActive({ textAlign: 'left' }) ? 'secondary' : 'ghost'}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => editor.chain().focus().setTextAlign('left').run()}
+                >
+                    <AlignLeft className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-200" disabled title="Not supported in plain text">
-                    <AlignCenter className="h-4 w-4 text-muted-foreground" />
+                <Button
+                    variant={editor.isActive({ textAlign: 'center' }) ? 'secondary' : 'ghost'}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => editor.chain().focus().setTextAlign('center').run()}
+                >
+                    <AlignCenter className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-200" disabled title="Not supported in plain text">
-                    <AlignRight className="h-4 w-4 text-muted-foreground" />
+                <Button
+                    variant={editor.isActive({ textAlign: 'right' }) ? 'secondary' : 'ghost'}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => editor.chain().focus().setTextAlign('right').run()}
+                >
+                    <AlignRight className="h-4 w-4" />
                 </Button>
                 <div className="w-px h-6 bg-border mx-2" />
-                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-200" onClick={() => handleFormat('list')}>
+                <Button
+                    variant={editor.isActive('bulletList') ? 'secondary' : 'ghost'}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => editor.chain().focus().toggleBulletList().run()}
+                >
                     <List className="h-4 w-4" />
                 </Button>
+                <div className="w-px h-6 bg-border mx-2" />
+                <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+                    <DialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Code className="h-4 w-4" />
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                        <DialogHeader>
+                            <DialogTitle>Import HTML Content</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                            <Textarea
+                                placeholder="Paste your HTML content here..."
+                                value={htmlImport}
+                                onChange={(e) => setHtmlImport(e.target.value)}
+                                className="min-h-[300px] font-mono text-sm"
+                            />
+                            <div className="flex justify-end gap-2">
+                                <Button variant="outline" onClick={() => setShowImportDialog(false)}>
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={() => {
+                                        if (htmlImport.trim()) {
+                                            editor.commands.setContent(htmlImport.trim())
+                                            setHtmlImport('')
+                                            setShowImportDialog(false)
+                                        }
+                                    }}
+                                >
+                                    Import HTML
+                                </Button>
+                            </div>
+                        </div>
+                    </DialogContent>
+                </Dialog>
             </div>
 
-            {/* Text Area */}
-            <Textarea
-                ref={textareaRef}
-                className="flex-1 font-mono text-sm resize-none p-6 leading-relaxed border-0 focus-visible:ring-0 rounded-none overflow-y-scroll [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 hover:[&::-webkit-scrollbar-thumb]:bg-slate-300"
-                placeholder="Start typing your template here..."
-                value={value}
-                onChange={(e) => onChange?.(e.target.value)}
-            />
+            {/* Editor Content */}
+            <div className="flex-1 overflow-y-auto">
+                <EditorContent editor={editor} />
+            </div>
         </div>
     )
 }
-
