@@ -9,9 +9,10 @@ import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Upload, X, FileText, Sparkles, Plus, Trash2, Filter } from 'lucide-react'
+import { Upload, X, FileText, Sparkles, Plus, Trash2, Filter, AlertTriangle } from 'lucide-react'
 import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
+import { DocumentProcessor } from '@/lib/document_processor'
 import { useMasterData } from '@/contexts/MasterDataContext'
 import { useCase } from '@/hooks/api/useCases'
 import { useRouter } from 'next/navigation'
@@ -21,6 +22,7 @@ import { useCompany } from '@/hooks/api/useCompany'
 import { useCases } from '@/hooks/api/useCases'
 import { useClients } from '@/hooks/api/useClients'
 import { useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 
 interface QueueItem {
     id: string
@@ -137,6 +139,16 @@ export function BulkDocumentUploader({ caseId, onComplete, cancelHref }: BulkDoc
         // Validation: Require document type selection
         if (!documentTypeId) {
             return
+        }
+
+        // Check for unsupported file formats and show warnings
+        const { valid, invalid } = DocumentProcessor.validateFiles(selectedFiles)
+
+        if (invalid.length > 0) {
+            toast.warning("Some files may not be processed", {
+                description: invalid.map(item => `${item.file.name}: ${item.reason}`).join('\n'),
+                duration: 6000
+            })
         }
 
         // For supporting documents, we use the subcategory ID as documentTypeId

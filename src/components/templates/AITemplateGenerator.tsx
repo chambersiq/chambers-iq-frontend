@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'sonner'
 import { v4 as uuidv4 } from 'uuid'
+import api from '@/lib/api'
 
 interface AITemplateGeneratorProps {
     onGenerate: (content: string) => void
@@ -53,31 +54,31 @@ export function AITemplateGenerator({ onGenerate }: AITemplateGeneratorProps) {
     }
 
     const handleGenerate = async () => {
+        console.log('🚀 Starting template generation...')
+        console.log('📁 Files selected:', files.length)
+
         setIsGenerating(true)
         const generationId = uuidv4()
 
         try {
-            // Step 1: Upload Documents (Keep for record)
+            // Step 1: Upload Documents to S3 and collect S3 keys
+            const s3Keys: string[] = []
             if (files.length > 0) {
                 setStatusMessage('Uploading sample documents...')
-                const uploadPromises = files.map(file =>
-                    uploadSample.mutateAsync({ generationId, file })
-                )
+                const uploadPromises = files.map(async (file) => {
+                    const result = await uploadSample.mutateAsync({ generationId, file })
+                    s3Keys.push(result.s3Key) // Collect the S3 key from response
+                    return result
+                })
                 await Promise.all(uploadPromises)
+                console.log('📤 Uploaded files with S3 keys:', s3Keys)
             }
 
-            // Step 2: Start Agent Workflow
+            // Step 2: Start Agent Workflow with S3 keys (not raw content)
             setStatusMessage('Starting Template Architect Agent...')
 
-            // Read files content for the agent
-            const fileContents = await Promise.all(files.map(file => readFileAsText(file)))
-
-            // Add prompt as a "sample" or context if needed, but for now agent expects samples
-            // We can prepend the prompt to the first sample or send it separately if we update backend
-            // For MVP, valid assumption: Files are samples.
-
             const result = await startWorkflow.mutateAsync({
-                sampleDocs: fileContents,
+                sampleDocs: s3Keys, // Send S3 keys, not raw file content
                 // @ts-ignore - Backend expects snake_case, frontend camelCase/any
                 is_simulation: isSimulation
             })
@@ -93,8 +94,8 @@ export function AITemplateGenerator({ onGenerate }: AITemplateGeneratorProps) {
             setFiles([])
             setStatusMessage('')
 
-        } catch (error) {
-            console.error(error)
+        } catch (error: any) {
+            console.error('❌ Error during template generation:', error)
             toast.error("Failed to start agent", {
                 description: "There was an error starting the workflow. Please try again."
             })
